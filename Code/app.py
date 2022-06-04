@@ -12,12 +12,12 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['SESSION_COOKIE_NAME'] = 'login-system'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME'] = "eventxsjec@gmail.com"
+app.config['MAIL_SERVER'] = 'smtp-mail.outlook.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USERNAME'] = "eventxsjec@outlook.com"
 app.config['MAIL_PASSWORD'] = "#Eventx18"
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
 
 db = SQLAlchemy(app)
 mail = Mail(app)
@@ -45,7 +45,7 @@ class Participant(db.Model):
     def __repr__(self):
         return '<Participant %r>' % self.email
 
-#db.create_all()
+db.create_all()
 #db.drop_all()
 
 #home page
