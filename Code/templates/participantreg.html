@@ -113,7 +113,7 @@
                   </div>
                   <div class="mb-3">
                     <label class="form-label">Category</label>
-                    <select class="form-select" name="category">
+                    <select class="form-select" name="category" required>
                       <option selected>Open this select menu</option>
                       <option value="Primary">Primary</option>
                       <option value="High School">High School</option>
@@ -180,30 +180,12 @@
                 </div>
               </div>
             </div>
-
-            <h4><span> OR</span></h4>
-
-            <div style="text-align: center">
-              <a href="/login_google"
-              <button
-                class="btn btn-outline-dark"
-
-                role="button"
-                id="google"
-              >
-                <img
-                  width="20px"
-                  style="margin-bottom: 3px; margin-right: 5px"
-                  alt="Google sign-in"
-                  src="static/go.png"
-                />&nbsp; Register with Google
-              </button>
-              </a>
-            </div>
             <div style="text-align: center; margin-top: 10px">
               <p>
                 Already Have An Account?
-                <a href="/participantlog" style="text-decoration: none">Login</a>
+                <a href="/participantlog" style="text-decoration: none"
+                  >Login</a
+                >
               </p>
             </div>
             <div class="container">

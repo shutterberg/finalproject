@@ -14,10 +14,13 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 
 app.config['MAIL_SERVER'] = 'smtp-mail.outlook.com'
 app.config['MAIL_PORT'] = 587
-app.config['MAIL_USERNAME'] = "eventxsjec@outlook.com"
+app.config['MAIL_participantNAME'] = "eventxsjec@outlook.com"
 app.config['MAIL_PASSWORD'] = "#Eventx18"
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
+
+#client_id="505348922138-a10mfp737qq5lmgi33opfis1ln0cka5j.apps.googleusercontent.com",
+#client_secret='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',
 
 db = SQLAlchemy(app)
 mail = Mail(app)
@@ -152,46 +155,10 @@ def participant_register():
         flash('Unauthorized access','error')
         return redirect(url_for('home'))
 
+
 @app.route("/participantlog")
 def participantlog():
     return render_template('participant_log.html')
-
-
-@app.route("/participantdash")
-def participantdash():
-    if 'participant' in session:
-        return render_template('participant_dash.html')
-    else:
-        flash("Session Expired", "error")
-        return redirect(url_for("participantlog"))
-
-
-@app.route("/participant_forpass")
-def participant_forpass():
-    return render_template('participant_forpass.html')
-
-@app.route("/participant_otp")
-def participant_otp():
-    return render_template('participant_otp.html')
-
-@app.route("/participant_forpass_form")
-def participant_forpass_form():
-    return render_template('participant_forpass_form.html')
-
-@app.route("/participant_profile")
-def participant_profile():
-    return render_template('participant_profile.html')
-
-@app.route("/participant_profile_update")
-def participant_profile_update():
-    if 'participant' in session:
-        get_participant_data = Participant.query.filter_by(id=session['participant_id']).first()
-        return render_template('participant_profupdate.html',data=get_participant_data)
-    else:
-        flash("Session Expired", "error")
-        return redirect(url_for("participantlog"))
-
-
 
 #participant login
 @app.route("/participant_login",methods=['POST'])
@@ -211,6 +178,7 @@ def participant_login():
                 session['participant_name'] = response.name
                 session['participant_email'] = response.email
                 session['participant_phone'] = response.phone
+                session['participant_category'] = response.category
                 flash('You were successfully logged in',"success")
                 return redirect(url_for("participantdash"))
             else:
@@ -220,6 +188,214 @@ def participant_login():
         session.clear()
         flash('Unauthorized access','error')
         return redirect(url_for('home'))
+
+@app.route("/participantdash")
+def participantdash():
+    if 'participant' in session:
+        return render_template('participant_dash.html')
+    else:
+        flash("Session Expired", "error")
+        return redirect(url_for("participantlog"))
+
+@app.route("/participant_forpass")
+def participant_forpass():
+    return render_template('participant_forpass.html')
+
+#participant forgot password
+@app.route("/participant_send_otp",methods=['POST'])
+def participant_send_otp():
+    if request.method == 'POST':
+        email = request.form['email']
+        email_check = Participant.query.filter_by(email=email).first()
+        if email_check:
+            session['participant'] = True
+            session['email'] = email_check.email
+            otp = random.randint(000000,999999)
+            session['otp'] = otp
+            msg = Message('OTP for Password change',sender="eventxsjec@outlook.com",recipients=[email])
+            msg.body = "Dear participant, your verification code is: " + str(otp)
+            mail.send(msg)
+            flash("OTP sent","success")
+            return redirect(url_for("participant_otp"))
+        else:
+            flash("Email ID not registered. Please check your email id or create a new account","error")
+            return redirect(url_for('participantlog'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+@app.route("/participant_otp")
+def participant_otp():
+    return render_template('participant_otp.html')
+
+#participant otp verification for forgot password
+@app.route('/participant_verify',methods=['POST'])
+def participant_verify():
+    if request.method == "POST":
+        if 'participant' in session:
+            participant_otp = request.form['participant_otp']
+            if session['otp'] == int(participant_otp):
+                return redirect(url_for("participant_forpass_form"))
+            else:
+                flash("Wrong OTP. Please try again","error")
+                return redirect(url_for("participant_otp"))
+        else:
+            flash("Session Expired","error")
+            return redirect(url_for('participantlog'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+@app.route("/participant_forpass_form")
+def participant_forpass_form():
+    return render_template('participant_forpass_form.html')
+
+#participant change password after otp verification
+@app.route('/change_participant_pass',methods=['POST'])
+def change_participant_pass():
+    if request.method == "POST":
+        if 'participant' in session:
+            pass1 = request.form['pass1']
+            flag = 0
+            while True:  
+                if (len(pass1)<8):
+                    flag = -1
+                    break
+                elif not re.search("[a-z]", pass1):
+                    flag = -1
+                    break
+                elif not re.search("[A-Z]", pass1):
+                    flag = -1
+                    break
+                elif not re.search("[0-9]", pass1):
+                    flag = -1
+                    break
+                elif not re.search("[_@$]", pass1):
+                    flag = -1
+                    break
+                elif re.search("\\s", pass1):
+                    flag = -1
+                    break
+                else:
+                    flag = 0
+                    break
+            if flag ==-1:
+                flash("Not a Valid Password","error")
+                return redirect(url_for("participant_forpass_form"))
+            pass2 = request.form['pass2']
+            if pass1 == pass2:
+                hash_pass = sha256_crypt.hash(pass1)
+                data = Participant.query.filter_by(email=session['email']).first()
+                data.password = hash_pass
+                db.session.commit()
+                session.pop('participant',None)
+                session.pop('email',None)
+                flash("Password changed successfully","success")
+                return redirect(url_for("participantlog"))
+            else:
+                flash("Passwords dont match",'error')
+                return redirect(url_for('participant_forpass_form'))
+        else:
+            flash("Session Expired","error")
+            return redirect(url_for('participantlog'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+@app.route("/participant_profile")
+def participant_profile():
+    return render_template('participant_profile.html')
+
+@app.route("/participant_profile_update")
+def participant_profile_update():
+    if 'participant' in session:
+        get_participant_data = Participant.query.filter_by(id=session['participant_id']).first()
+        return render_template('participant_profupdate.html',data=get_participant_data)
+    else:
+        flash("Session Expired", "error")
+        return redirect(url_for("participantlog"))
+
+#participant profile update
+@app.route("/update_participant_profile/<int:id>",methods=['POST'])
+def update_participant_profile(id):
+    if 'participant' in session:
+        if request.method == 'POST':
+            name = request.form['name']
+            email = request.form['email']
+            phno = request.form['phno']
+            category = request.form['category']
+            data = Participant.query.filter_by(id=id).first()
+            email_check = Participant.query.filter_by(email=email).first()
+            if email_check:
+                if(email_check.id != id):
+                    flash("Email ID is already used by someone else","error")
+                    data = Participant.query.filter_by(id=id).first()
+                    return render_template('participant_profupdate.html',data=data)
+                elif(email_check.id == id):
+                    data.email = email
+                    data.name = name
+                    phno_check = Participant.query.filter_by(phone=phno).first()
+                    if phno_check:
+                        if(phno_check.id != id):
+                            flash("Phone number is already used by someone else","error")
+                            data = Participant.query.filter_by(id=id).first()
+                            return render_template('participant_profupdate.html',data=data)
+                        elif(phno_check.id == id):
+                            data.phone = phno
+                            data.category = category
+                            db.session.commit()
+                            session.clear()
+                            flash("Participant details updated successfully.Login again to see changes","success")
+                            return redirect(url_for("participantlog"))
+                    else:
+                        data.phone = phno
+                        data.category = category
+                        db.session.commit()
+                        session.clear()
+                        flash("Participant details updated successfully.Login again to see changes","success")
+                        return redirect(url_for("participantlog"))
+            else:
+                data.email = email
+                data.name = name
+                phno_check = Participant.query.filter_by(phone=phno).first()
+                if phno_check:
+                    if(phno_check.id != id):
+                        flash("Phone number is already used by someone else","error")
+                        data = Participant.query.filter_by(id=id).first()
+                        return render_template('participant_profupdate.html',data=data)
+                    elif(phno_check.id == id):
+                        data.phone = phno
+                        data.category = category
+                        db.session.commit()
+                        session.clear()
+                        flash("Participant details updated successfully.Login again to see changes","success")
+                        return redirect(url_for("participantlog"))
+                else:
+                    data.phone = phno
+                    data.category = category
+                    db.session.commit()
+                    session.clear()
+                    flash("Participant details updated successfully.Login again to see changes","success")
+                    return redirect(url_for("participantlog"))
+        else:
+            session.clear()
+            flash('Unauthorized access','error')
+            return redirect(url_for('home'))
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('participantlog'))
+
+@app.route("/change_pass_participant")
+def change_pass_participant():
+    if 'participant' in session:
+        get_participant_data = Participant.query.filter_by(id=session['participant_id']).first()
+        return render_template('change_pass_participant.html',data=get_participant_data) 
+    else:
+        flash("Session Expired", "error")
+        return redirect(url_for("participantlog"))
 
 #participant change password after login            
 @app.route('/participant_change_pass',methods=['POST'])
@@ -276,183 +452,6 @@ def participant_change_pass():
         session.clear()
         flash('Unauthorized access','error')
         return redirect(url_for('home'))
-
-#participant forgot password
-@app.route("/participant_send_otp",methods=['POST'])
-def participant_send_otp():
-    if request.method == 'POST':
-        email = request.form['email']
-        email_check = Participant.query.filter_by(email=email).first()
-        if email_check:
-            session['participant'] = True
-            session['email'] = email_check.email
-            otp = random.randint(000000,999999)
-            session['otp'] = otp
-            msg = Message('OTP for Password change',sender="bookezy13@gmail.com",recipients=[email])
-            msg.body = "Dear participant, your verification code is: " + str(otp)
-            mail.send(msg)
-            flash("OTP sent","success")
-            return redirect(url_for("participant_otp"))
-        else:
-            flash("Email ID not registered. Please check your email id or create a new account","error")
-            return redirect(url_for('participantlog'))
-    else:
-        session.clear()
-        flash('Unauthorized access','error')
-        return redirect(url_for('home'))
-
-#participant otp verification for forgot password
-@app.route('/participant_verify',methods=['POST'])
-def participant_verify():
-    if request.method == "POST":
-        if 'participant' in session:
-            participant_otp = request.form['participant_otp']
-            if session['otp'] == int(participant_otp):
-                return redirect(url_for("participant_forpass_form"))
-            else:
-                flash("Wrong OTP. Please try again","error")
-                return redirect(url_for("participant_otp"))
-        else:
-            flash("Session Expired","error")
-            return redirect(url_for('participantlog'))
-    else:
-        session.clear()
-        flash('Unauthorized access','error')
-        return redirect(url_for('home'))
-
-#participant change password after otp verification
-@app.route('/change_participant_pass',methods=['POST'])
-def change_participant_pass():
-    if request.method == "POST":
-        if 'participant' in session:
-            pass1 = request.form['pass1']
-            flag = 0
-            while True:  
-                if (len(pass1)<8):
-                    flag = -1
-                    break
-                elif not re.search("[a-z]", pass1):
-                    flag = -1
-                    break
-                elif not re.search("[A-Z]", pass1):
-                    flag = -1
-                    break
-                elif not re.search("[0-9]", pass1):
-                    flag = -1
-                    break
-                elif not re.search("[_@$]", pass1):
-                    flag = -1
-                    break
-                elif re.search("\\s", pass1):
-                    flag = -1
-                    break
-                else:
-                    flag = 0
-                    break
-            if flag ==-1:
-                flash("Not a Valid Password","error")
-                return redirect(url_for("participant_forpass_form"))
-            pass2 = request.form['pass2']
-            if pass1 == pass2:
-                hash_pass = sha256_crypt.hash(pass1)
-                data = Participant.query.filter_by(email=session['email']).first()
-                data.password = hash_pass
-                db.session.commit()
-                session.pop('participant',None)
-                session.pop('email',None)
-                flash("Password changed successfully","success")
-                return redirect(url_for("participantlog"))
-            else:
-                flash("Passwords dont match",'error')
-                return redirect(url_for('participant_forpass_form'))
-        else:
-            flash("Session Expired","error")
-            return redirect(url_for('participantlog'))
-    else:
-        session.clear()
-        flash('Unauthorized access','error')
-        return redirect(url_for('home'))
-
-#participant profile update
-@app.route("/update_participant_profile/<int:id>",methods=['POST'])
-def update_participant_profile(id):
-    if 'participant' in session:
-        if request.method == 'POST':
-            name = request.form['name']
-            email = request.form['email']
-            phno = request.form['phno']
-            address = request.form['address']
-            data = Participant.query.filter_by(id=id).first()
-            email_check = Participant.query.filter_by(email=email).first()
-            if email_check:
-                if(email_check.id != id):
-                    flash("Email ID is already used by someone else","error")
-                    data = Participant.query.filter_by(id=id).first()
-                    return render_template('participant_profupdate.html',data=data)
-                elif(email_check.id == id):
-                    data.email = email
-                    data.name = name
-                    phno_check = Participant.query.filter_by(phone=phno).first()
-                    if phno_check:
-                        if(phno_check.id != id):
-                            flash("Phone number is already used by someone else","error")
-                            data = Participant.query.filter_by(id=id).first()
-                            return render_template('participant_profupdate.html',data=data)
-                        elif(phno_check.id == id):
-                            data.phone = phno
-                            data.address = address
-                            db.session.commit()
-                            session.clear()
-                            flash("participant details updated successfully.Login again to see changes","success")
-                            return redirect(url_for("participantlog"))
-                    else:
-                        data.phone = phno
-                        data.address = address
-                        db.session.commit()
-                        session.clear()
-                        flash("participant details updated successfully.Login again to see changes","success")
-                        return redirect(url_for("participantlog"))
-            else:
-                data.email = email
-                data.name = name
-                phno_check = Participant.query.filter_by(phone=phno).first()
-                if phno_check:
-                    if(phno_check.id != id):
-                        flash("Phone number is already used by someone else","error")
-                        data = Participant.query.filter_by(id=id).first()
-                        return render_template('participant_profupdate.html',data=data)
-                    elif(phno_check.id == id):
-                        data.phone = phno
-                        data.address = address
-                        db.session.commit()
-                        session.clear()
-                        flash("participant details updated successfully.Login again to see changes","success")
-                        return redirect(url_for("participantlog"))
-                else:
-                    data.phone = phno
-                    data.address = address
-                    db.session.commit()
-                    session.clear()
-                    flash("participant details updated successfully.Login again to see changes","success")
-                    return redirect(url_for("participantlog"))
-        else:
-            session.clear()
-            flash('Unauthorized access','error')
-            return redirect(url_for('home'))
-    else:
-        flash("Session Expired","error")
-        return redirect(url_for('participantlog'))
-
-
-
-
-
-
-
-
-
-
-
 
 
 

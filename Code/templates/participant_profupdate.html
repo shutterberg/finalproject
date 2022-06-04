@@ -88,14 +88,14 @@
                 />
               </div>
               <div class="mb-3" style="margin-top: 10px">
-                <label class="form-label"> Address </label>
-                <input
-                  type="text"
-                  class="form-control"
-                  name="address"
-                  value="{{data.address}}"
-                  required
-                />
+                <label class="form-label">Category</label>
+                    <select class="form-select" name="category" required>
+                      <option selected>{{data.category}}</option>
+                      <option value="Primary">Primary</option>
+                      <option value="High School">High School</option>
+                      <option value="PU">PU</option>
+                      <option value="Graduate">Graduate</option>
+                    </select>
               </div>
               <div class="row justify-content-center">
                 <button type="submit" id="button1" class="btn btn-primarys">
