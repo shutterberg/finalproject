@@ -3,7 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from passlib.hash import sha256_crypt
 import os,random,re
 from datetime import timedelta
-from flask_mail import Mail,Message
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(16)
@@ -12,18 +13,10 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['SESSION_COOKIE_NAME'] = 'login-system'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 
-app.config['MAIL_SERVER'] = 'smtp-mail.outlook.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_participantNAME'] = "eventxsjec@outlook.com"
-app.config['MAIL_PASSWORD'] = "#Eventx18"
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
-
 #client_id="505348922138-a10mfp737qq5lmgi33opfis1ln0cka5j.apps.googleusercontent.com",
 #client_secret='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',
 
 db = SQLAlchemy(app)
-mail = Mail(app)
 
 #creating tables
 class Organizer(db.Model):
@@ -65,6 +58,17 @@ class Organization(db.Model):
 @app.route("/")
 def home():
     return render_template('home.html')
+
+def send_mail(recepient,mail_object,body):
+    message = Mail(
+    from_email=("eventxsjec@gmail.com", "EventX"),
+    to_emails=recepient,
+    subject=mail_object,
+    html_content=body)
+
+    sg = SendGridAPIClient(
+    "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")
+    sg.send(message)
 
 #login page
 @app.route("/alllog")
@@ -151,9 +155,7 @@ def participant_register():
                 participant = Participant(name=name,email=email,phone=phone,category=category,password=hash_pass)
                 db.session.add(participant)
                 db.session.commit()
-                msg = Message("Registration Confirmation",sender="eventxsjec@outlook.com",recipients=[email])
-                msg.body = "Thank you for registering on our website.Hope you have a good experience"
-                mail.send(msg)
+                send_mail(email,"Registration Successfull","Thank you for registering on our website.Hope you have a good experience")
                 flash('Registeration successfully','success')
                 return redirect(url_for('participantlog'))
             else:
@@ -224,9 +226,7 @@ def participant_send_otp():
             session['email'] = email_check.email
             otp = random.randint(000000,999999)
             session['otp'] = otp
-            msg = Message('OTP for Password change',sender="eventxsjec@outlook.com",recipients=[email])
-            msg.body = "Dear participant, your verification code is: " + str(otp)
-            mail.send(msg)
+            send_mail(email,'OTP for Password change',"Dear participant, your verification code is: " + str(otp))
             flash("OTP sent","success")
             return redirect(url_for("participant_otp"))
         else:
@@ -525,9 +525,7 @@ def add_organizer():
                     organizer = Organizer(name=name,email=email,phone=phone,password=hash_pass,organization=organization)
                     db.session.add(organizer)
                     db.session.commit()
-                    msg = Message("Your are a Organizer!",sender="eventxsjec@outlook.com",recipients=[email])
-                    msg.body = "You have been successfully added as a ORGANIZER under the organization "+str(organization).upper()+". Please use your email as your password on your first login and change it by clicking the update profile option"
-                    mail.send(msg)
+                    send_mail(email,"Your are a Organizer!","You have been successfully added as a ORGANIZER under the organization "+str(organization).upper()+". Please use your email as your password on your first login and change it by clicking the update profile option")
                     flash('Organizer added successfully','success')
                     return redirect(url_for('admin_dash'))
                 else:
