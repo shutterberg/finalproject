@@ -26,15 +26,16 @@ db = SQLAlchemy(app)
 mail = Mail(app)
 
 #creating tables
-""" class Organizer(db.Model):
+class Organizer(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     name = db.Column(db.String(50),nullable=False)
     email = db.Column(db.String(100),nullable=False,unique=True)
     phone = db.Column(db.String(11), nullable=False, unique=True)
-    password = db.Column(db.String(255),nullable=True)
+    password = db.Column(db.String(255),nullable=False)
+    organization = db.Column(db.String(255),nullable=False)
 
     def __repr__(self):
-        return '<Organizer %r>' % self.email """
+        return '<Organizer %r>' % self.email
 
 class Participant(db.Model):
     id = db.Column(db.Integer,primary_key=True)
@@ -48,7 +49,16 @@ class Participant(db.Model):
     def __repr__(self):
         return '<Participant %r>' % self.email
 
-db.create_all()
+class Organization(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    name = db.Column(db.String(50),nullable=False)
+    email = db.Column(db.String(100),nullable=False,unique=True)
+    location = db.Column(db.String(100),nullable=False)
+
+    def __repr__(self):
+        return '<Organization %r>' % self.email
+
+#db.create_all()
 #db.drop_all()
 
 #home page
@@ -68,7 +78,9 @@ def admin_log():
 @app.route("/admin_dash")
 def admin_dash():
     if 'admin' in session:
-        return render_template('admin_dash.html')
+        organizations = Organization.query.count()
+        organizers = Organizer.query.count()
+        return render_template('admin_dash.html',data=[organizations,organizers])
     else:
         flash("Session Expired", "error")
         return redirect(url_for('admin_log'))
@@ -453,6 +465,84 @@ def participant_change_pass():
         flash('Unauthorized access','error')
         return redirect(url_for('home'))
 
+@app.route("/organization")
+def organization():
+    if 'admin' in session:
+        return render_template('add_organization.html')
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('admin_log'))
+
+#adding organization
+@app.route("/add_organization",methods=["POST"])
+def add_organization():
+    if request.method == 'POST':
+        if 'admin' in session:
+            name = request.form['name']
+            email = request.form['email']     
+            location = request.form['location']
+            email_check = Organization.query.filter_by(email=email).first()
+            if not email_check:
+                organization = Organization(name=name,email=email,location=location)
+                db.session.add(organization)
+                db.session.commit()
+                flash('Organization added successfully','success')
+                return redirect(url_for('admin_dash'))
+            else:
+                flash("Email ID already used","error")
+                return redirect(url_for('organization'))
+        else:
+            flash("Session Expired","error")
+            return redirect(url_for('admin_log'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+@app.route("/organizer")
+def organizer():
+    if 'admin' in session:
+        get_organization_data = Organization.query.all()
+        return render_template('add_organizer.html',data=get_organization_data)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('admin_log'))
+
+#adding organizer
+@app.route("/add_organizer",methods=["POST"])
+def add_organizer():
+    if request.method == 'POST':
+        if 'admin' in session:
+            name = request.form['name']
+            email = request.form['email']     
+            phone = request.form['phone']
+            organization = request.form['organization']
+            email_check = Organizer.query.filter_by(email=email).first()
+            if not email_check:
+                phone_check = Organizer.query.filter_by(phone=phone).first()
+                if not phone_check:
+                    hash_pass = sha256_crypt.hash(email)
+                    organizer = Organizer(name=name,email=email,phone=phone,password=hash_pass,organization=organization)
+                    db.session.add(organizer)
+                    db.session.commit()
+                    msg = Message("Your are a Organizer!",sender="eventxsjec@outlook.com",recipients=[email])
+                    msg.body = "You have been successfully added as a ORGANIZER under the organization "+str(organization).upper()+". Please use your email as your password on your first login and change it by clicking the update profile option"
+                    mail.send(msg)
+                    flash('Organizer added successfully','success')
+                    return redirect(url_for('admin_dash'))
+                else:
+                    flash("Phone Number already registered","error")
+                    return redirect(url_for('organizer'))
+            else:
+                flash("Email ID already used","error")
+                return redirect(url_for('organizer'))
+        else:
+            flash("Session Expired","error")
+            return redirect(url_for('admin_log'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
 
 
 #logout function for all
