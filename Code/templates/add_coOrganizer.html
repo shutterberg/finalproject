@@ -1,6 +1,6 @@
-{% extends "admin_layout.html" %}
+{% extends "organizer_layout.html" %}
 <!--title part-->
-{% block title %}Add Organization{% endblock %}
+{% block title %}Add Co-Organizer{% endblock %}
 <!--head part-->
 {% block head %} {{ super() }}
 <style>
@@ -76,12 +76,12 @@
       <div class="col-sm-5">
         <div class="card">
           <div class="card-header">
-            <p style="margin-top: 6px">Add Organization</p>
+            <p style="margin-top: 6px">Add Co-Organizer</p>
           </div>
           <div class="card-body">
             <div class="container mb-2">
               <div class="row justify-content-center">
-                <form action="/add_organization" method="POST">
+                <form action="/addcoOrganizer" method="POST">
                   <div class="mb-3" style="margin-top: 30px">
                     <label class="form-label">Name</label>
                     <input
@@ -101,11 +101,13 @@
                     />
                   </div>
                   <div class="mb-3">
-                    <label class="form-label">Location</label>
+                    <label class="form-label">Phone</label>
                     <input
-                      type="text"
+                      type="tel"
                       class="form-control"
-                      name="location"
+                      name="phone"
+                      maxlength="10"
+                      minlength="10"
                       required
                     />
                   </div>
