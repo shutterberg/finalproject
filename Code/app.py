@@ -5,6 +5,7 @@ import os,random,re
 from datetime import timedelta
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
+from sendgrid.helpers.mail import To
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(16)
@@ -58,6 +59,7 @@ class CoOrganizer(db.Model):
     email = db.Column(db.String(100),nullable=False,unique=True)
     phone = db.Column(db.String(11), nullable=False, unique=True)
     password = db.Column(db.String(255),nullable=False)
+    organizer = db.Column(db.String(50),nullable=False)
     #events = db.relationship('Event',backref='owner')
     
     def __repr__(self):
@@ -75,6 +77,14 @@ class Event(db.Model):
 
     def __repr__(self):
         return '<Event %r>' % self.name
+
+class Alert(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    attendee = db.Column(db.String(50),nullable=False)
+    organizer = db.Column(db.String(50),nullable=False)
+
+    def __repr__(self):
+        return self.attendee
 
 #db.create_all()
 #db.drop_all()
@@ -983,6 +993,7 @@ def addcoOrganizer():
     if request.method == 'POST':
         if 'organizer' in session:
             organization = session['organizer_organization']
+            organizer = session['organizer_name']
             name = request.form['name']
             email = request.form['email']     
             phone = request.form['phone']
@@ -991,7 +1002,7 @@ def addcoOrganizer():
                 phone_check = CoOrganizer.query.filter_by(phone=phone).first()
                 if not phone_check:
                     hash_pass = sha256_crypt.hash(email)
-                    coOrganizer = CoOrganizer(name=name,email=email,phone=phone,password=hash_pass)
+                    coOrganizer = CoOrganizer(name=name,email=email,phone=phone,password=hash_pass,organizer=organizer)
                     db.session.add(coOrganizer)
                     db.session.commit()
                     send_mail(email,"You are a Co-Organizer!","You have been successfully added as a CO-ORGANIZER under the organization "+str(organization).upper()+". Please use your email as your password on your first login and change it by clicking the change password option")
@@ -1011,6 +1022,351 @@ def addcoOrganizer():
         flash('Unauthorized access','error')
         return redirect(url_for('home'))
 
+@app.route("/view_coOrganizer")
+def view_coOrganizer():
+    if 'organizer' in session:
+        coorgs = CoOrganizer.query.all()
+        return render_template('view_coOrganizer.html',data=coorgs)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('organizer_log'))
+
+@app.route("/del_coOrganizer/<int:id>")
+def del_coOrganizer(id):
+    if 'organizer' in session:
+        coOrganizer = CoOrganizer.query.filter_by(id=id).first()
+        db.session.delete(coOrganizer)
+        db.session.commit()
+        flash("Co-Organizer deleted successfully","success")
+        return redirect(url_for('view_coOrganizer'))
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('organizer_log'))
+
+@app.route("/send_alert")
+def send_alert():
+    if 'organizer' in session:
+        alerts = Alert.query.all()
+        return render_template('send_alert.html',data=alerts)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('organizer_log'))
+
+#novin
+@app.route("/sendalert",methods=["POST"])
+def sendalert():
+    if request.method == 'POST':
+        if 'organizer' in session:
+            subject = request.form['subject']
+            messages = request.form['message']
+            attendees = Alert.query.all()
+            print(attendees)
+            for i in attendees:
+                message = Mail(
+                from_email=("eventxsjec@gmail.com", "EventX"),
+                to_emails=To(i),
+                subject=subject,
+                html_content=messages)
+                sg = SendGridAPIClient(
+                "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")
+                sg.send(message)
+            flash("Alert message broadcasted","success")
+            return redirect(url_for('send_alert'))
+        else:
+            flash("Session Expired","error")
+            return redirect(url_for('organizer_log'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+@app.route("/add_attendee/<string:email>")
+def add_attendee(email):
+    if 'organizer' in session:
+        data = Alert.query.filter_by(attendee=email).first()
+        if not data:
+            alert=Alert(attendee=email,organizer=session['organizer_name'])
+            db.session.add(alert)
+            db.session.commit()
+            flash('Attendee added successfully','success')
+            return redirect(url_for('send_alert'))
+        else:
+            flash("Attendee already added","error")
+            return redirect(url_for('send_alert'))
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('organizer_log'))
+
+@app.route("/del_attendee/<int:id>")
+def del_attendee(id):
+    if 'organizer' in session:
+        attendee = Alert.query.filter_by(id=id).first()
+        db.session.delete(attendee)
+        db.session.commit()
+        flash("Attendee removed successfully","success")
+        return redirect(url_for('send_alert'))
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('organizer_log'))
+
+@app.route("/coOrganizer_log",methods=['GET','POST'])
+def coOrganizer_log():
+    return render_template('coOrganizer_log.html')
+
+#co-organizer login
+@app.route("/coOrganizerlog",methods=['POST'])
+def coOrganizerlog():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        response = CoOrganizer.query.filter_by(email=email).first()
+        if not response:
+            flash("Email ID not registered",'error')
+            return redirect(url_for("coOrganizer_log"))   
+        else:
+            checkpass = sha256_crypt.verify(password,response.password)
+            if email == response.email and checkpass == True:
+                session['coOrganizer'] = True
+                session['coOrganizer_id'] = response.id
+                session['coOrganizer_name'] = response.name
+                session['coOrganizer_email'] = response.email
+                session['coOrganizer_phone'] = response.phone
+                session['coOrganizer_organizer'] = response.organizer
+                flash('You were successfully logged in',"success")
+                return redirect(url_for("coOrganizerdash"))
+            else:
+                flash('Invalid Credentials',"error")
+                return redirect(url_for("coOrganizer_log"))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+@app.route("/coOrganizerdash")
+def coOrganizerdash():
+    if 'coOrganizer' in session:
+        """ co_organizers = CoOrganizer.query.count()
+        events = Event.query.count() """
+        return render_template('coOrganizer_dash.html')
+    else:
+        flash("Session Expired", "error")
+        return redirect(url_for("coOrganizer_log"))
+
+
+@app.route("/coOrganizer_profile")
+def coOrganizer_profile():
+    return render_template('coOrganizer_profile.html')
+
+@app.route("/coOrganizer_profile_update")
+def coOrganizer_profile_update():
+    if 'coOrganizer' in session:
+        get_coOrganizer_data = CoOrganizer.query.filter_by(id=session['coOrganizer_id']).first()
+        return render_template('coOrganizer_profupdate.html',data=get_coOrganizer_data)
+    else:
+        flash("Session Expired", "error")
+        return redirect(url_for("coOrganizer_log"))
+
+#coOrganizer profile update
+@app.route("/update_coOrganizer_profile/<int:id>",methods=['POST'])
+def update_coOrganizer_profile(id):
+    if 'coOrganizer' in session:
+        if request.method == 'POST':
+            name = request.form['name']
+            phno = request.form['phno']
+            data = CoOrganizer.query.filter_by(id=id).first()
+            phno_check = CoOrganizer.query.filter_by(phone=phno).first()
+            if phno_check:
+                if(phno_check.id != id):
+                    flash("Phone number is already used by someone else","error")
+                    data = CoOrganizer.query.filter_by(id=id).first()
+                    return render_template('coOrganizer_profupdate.html',data=data)
+                elif(phno_check.id == id):
+                    data.phone = phno
+                    data.name = name
+                    db.session.commit()
+                    session.clear()
+                    flash("Co-Organizer details updated successfully.Login again to see changes","success")
+                    return redirect(url_for("coOrganizer_log"))
+            else:
+                data.phone = phno
+                data.name = name
+                db.session.commit()
+                session.clear()
+                flash("Co-Organizer details updated successfully.Login again to see changes","success")
+                return redirect(url_for("coOrganizer_log"))
+        else:
+            session.clear()
+            flash('Unauthorized access','error')
+            return redirect(url_for('home'))
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('coOrganizer_log'))
+
+@app.route("/change_pass_coOrganizer")
+def change_pass_coOrganizer():
+    if 'coOrganizer' in session:
+        get_coOrganizer_data = CoOrganizer.query.filter_by(id=session['coOrganizer_id']).first()
+        return render_template('change_pass_coOrganizer.html',data=get_coOrganizer_data) 
+    else:
+        flash("Session Expired", "error")
+        return redirect(url_for("coOrganizer_log"))
+
+#coOrganizer change password after login            
+@app.route('/coOrganizer_change_pass/<string:email>',methods=['POST'])
+def coOrganizer_change_pass(email):
+    if request.method == 'POST':
+        if 'coOrganizer' in session:
+            data = CoOrganizer.query.filter_by(email=email).first()
+            pass1 = request.form['pass1']
+            flag = 0
+            while True:  
+                if (len(pass1)<8):
+                    flag = -1
+                    break
+                elif not re.search("[a-z]", pass1):
+                    flag = -1
+                    break
+                elif not re.search("[A-Z]", pass1):
+                    flag = -1
+                    break
+                elif not re.search("[0-9]", pass1):
+                    flag = -1
+                    break
+                elif not re.search("[_@$]", pass1):
+                    flag = -1
+                    break
+                elif re.search("\\s", pass1):
+                    flag = -1
+                    break
+                else:
+                    flag = 0
+                    break
+            if flag ==-1:
+                flash("Not a Valid Password","error")
+                return redirect(url_for("change_pass_coOrganizer"))
+            pass2 = request.form['pass2']
+            if pass1 == pass2:
+                hash_pass = sha256_crypt.hash(pass1)
+                data.password = hash_pass
+                db.session.commit()
+                flash("Password changed successfully","success")
+                return redirect(url_for("coOrganizerdash"))
+            else:
+                flash("Passwords dont match",'error')
+                return redirect(url_for('change_pass_coOrganizer'))
+        else:
+            flash("Session Expired","error")
+            return redirect(url_for('coOrganizer_log'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+@app.route("/coOrganizer_forpass")
+def coOrganizer_forpass():
+    return render_template('coOrganizer_forpass.html')
+
+#coOrganizer forgot password
+@app.route("/coOrganizer_send_otp",methods=['POST'])
+def coOrganizer_send_otp():
+    if request.method == 'POST':
+        email = request.form['email']
+        email_check = CoOrganizer.query.filter_by(email=email).first()
+        if email_check:
+            session['coOrganizer'] = True
+            session['email'] = email_check.email
+            otp = random.randint(000000,999999)
+            session['otp'] = otp
+            send_mail(email,'OTP for Password change',"Dear Co-Organizer, your verification code is: " + str(otp))
+            flash("OTP sent","success")
+            return redirect(url_for("coOrganizer_otp"))
+        else:
+            flash("Email ID not registered. Please check your email id or ask organizer to create a new account","error")
+            return redirect(url_for('coOrganizer_log'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+@app.route("/coOrganizer_otp")
+def coOrganizer_otp():
+    return render_template('coOrganizer_otp.html')
+
+#Co-Organizer otp verification for forgot password
+@app.route('/coOrganizer_verify',methods=['POST'])
+def coOrganizer_verify():
+    if request.method == "POST":
+        if 'coOrganizer' in session:
+            coOrganizer_otp = request.form['coOrganizer_otp']
+            if session['otp'] == int(coOrganizer_otp):
+                return redirect(url_for("coOrganizer_forpass_form"))
+            else:
+                flash("Wrong OTP. Please try again","error")
+                return redirect(url_for("coOrganizer_otp"))
+        else:
+            flash("Session Expired","error")
+            return redirect(url_for('coOrganizer_log'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+@app.route("/coOrganizer_forpass_form")
+def coOrganizer_forpass_form():
+    return render_template('coOrganizer_forpass_form.html')
+
+#Co-Organizer change password after otp verification
+@app.route('/change_coOrganizer_pass',methods=['POST'])
+def change_coOrganizer_pass():
+    if request.method == "POST":
+        if 'coOrganizer' in session:
+            pass1 = request.form['pass1']
+            flag = 0
+            while True:  
+                if (len(pass1)<8):
+                    flag = -1
+                    break
+                elif not re.search("[a-z]", pass1):
+                    flag = -1
+                    break
+                elif not re.search("[A-Z]", pass1):
+                    flag = -1
+                    break
+                elif not re.search("[0-9]", pass1):
+                    flag = -1
+                    break
+                elif not re.search("[_@$]", pass1):
+                    flag = -1
+                    break
+                elif re.search("\\s", pass1):
+                    flag = -1
+                    break
+                else:
+                    flag = 0
+                    break
+            if flag ==-1:
+                flash("Not a Valid Password","error")
+                return redirect(url_for("coOrganizer_forpass_form"))
+            pass2 = request.form['pass2']
+            if pass1 == pass2:
+                hash_pass = sha256_crypt.hash(pass1)
+                data = CoOrganizer.query.filter_by(email=session['email']).first()
+                data.password = hash_pass
+                db.session.commit()
+                session.pop('coOrganizer',None)
+                session.pop('email',None)
+                flash("Password changed successfully","success")
+                return redirect(url_for("coOrganizer_log"))
+            else:
+                flash("Passwords dont match",'error')
+                return redirect(url_for('coOrganizer_forpass_form'))
+        else:
+            flash("Session Expired","error")
+            return redirect(url_for('coOrganizer_log'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
 
 
 
@@ -1020,6 +1376,7 @@ def logout():
     session.clear()
     flash('Logged out successfully',"success")
     return redirect(url_for("home"))
+
 
 if __name__ == '__main__':
     app.run(debug=True,port=9876)
