@@ -126,15 +126,7 @@
         font-size: 16px;
         font-family: Verdana, Geneva, Tahoma, sans-serif;
       }
-      #ab {
-        color: black;
-        border-bottom: none;
-        width: 240px;
-        height: 70px;
-      }
-      #ab:hover {
-        background-color: white;
-      }
+
       .card-header {
         background-color: #1976d2;
         text-align: center;
@@ -169,30 +161,45 @@
         text: "{{msg|upper}}",
         icon: "success",
         button: "OK",
-        timer: 3000
+        timer: 3500
       });
     </script>
     {% endif %} {% endfor %} {% endif %} {% endwith %}
     <div id="mySidenav" class="sidenav">
-      <header>Participant</header>
+      <header>Organizer</header>
       <a href="javascript:void(0)" class="closebtn" onclick="closeNav()"
         ><button class="btn btn-infos" id="close">
           <i class="fa fa-times"></i></button
       ></a>
 
       <ul class="list-unstyled components mb-5">
-        <li class="active">
-          <a href="/participantdash" class="a" style="background-color: #1565c0"
-            ><span class="fa fa-qrcode"></span>Dashboard</a
+        <li>
+          <a href="/organizerdash" class="a"
+            ><span class="fa fa-home"></span>Home</a
           >
         </li>
         <li>
-          <a href="/participant_profile" class="a"
+          <a href="/view_event" class="a"
+            ><span class="fa fa-th"></span>View Event</a
+          >
+        </li>
+        <li>
+          <a href="/add_event" class="a"
+            ><span class="fa fa-th"></span>Add Event</a
+          >
+        </li>
+        <li>
+          <a href="/add_coOrganizer" class="a"
+            ><span class="fa fa-user"></span>Add Co-Organizer</a
+          >
+        </li>
+        <li>
+          <a href="/organizer_profile" class="a"
             ><span class="fa fa-user"></span>My Profile</a
           >
         </li>
         <li>
-          <a href="/change_pass_participant" class="a"
+          <a href="/change_pass_organizer" class="a"
             ><span class="fa fa-key"></span>Change Password</a
           >
         </li>
@@ -211,7 +218,7 @@
     >
       <div class="container-fluid">
         <a class="navbar-brand" href="#"
-          ><h3 id="text1">Participant <span>Dashboard</span></h3></a
+          ><h3 id="text1">Organizer <span>Dashboard</span></h3></a
         >
 
         <button

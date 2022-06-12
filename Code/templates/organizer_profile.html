@@ -1,4 +1,4 @@
-{% extends "participant_layout.html" %}
+{% extends "organizer_layout.html" %}
 <!--title part-->
 {% block title %}My Profile{% endblock %}
 <!--head part-->
@@ -68,25 +68,25 @@
           <p class="card-text"></p>
           <p style="margin-bottom: 10px">
             <i class="fa fa-user" aria-hidden="true"></i
-            >&nbsp;&nbsp;{{session['participant_name']}}
+            >&nbsp;&nbsp;{{session['organizer_name']}}
           </p>
           <p style="margin-bottom: 8px">
             <i class="fa fa-phone" aria-hidden="true"></i
-            >&nbsp;&nbsp;{{session['participant_phone']}}
+            >&nbsp;&nbsp;{{session['organizer_phone']}}
           </p>
           <p>
             <i class="fa fa-envelope" aria-hidden="true"></i
-            >&nbsp;&nbsp;{{session['participant_email']}}
+            >&nbsp;&nbsp;{{session['organizer_email']}}
           </p>
           <p>
             <i class="fa fa-th-large"></i
-            >&nbsp;&nbsp;{{session['participant_category']}}
+            >&nbsp;&nbsp;{{session['organizer_organization']}}
           </p>
           <br />
           <h4><span> Click Here To Update</span></h4>
           <br />
           <div style="text-align: center">
-            <a href="/participant_profile_update"
+            <a href="/organizer_profile_update"
               ><button type="button" class="btn btn-primary" id="button1">
                 Update
               </button></a

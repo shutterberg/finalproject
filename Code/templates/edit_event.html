@@ -1,6 +1,6 @@
-{% extends "admin_layout.html" %}
+{% extends "organizer_layout.html" %}
 <!--title part-->
-{% block title %}Add Organization{% endblock %}
+{% block title %}Edit Event{% endblock %}
 <!--head part-->
 {% block head %} {{ super() }}
 <style>
@@ -12,7 +12,7 @@
     margin-top: 20px;
     width: 150px;
     border-radius: 50px;
-    background: url("static/back1.jpg") no-repeat;
+    background: url("../static/back1.jpg") no-repeat;
     background-position: center;
     background-size: cover;
     color: white;
@@ -38,13 +38,13 @@
     text-transform: none;
     width: 300px;
     border-radius: 50px;
-    background: url("static/back1.jpg") no-repeat;
+    background: url("../static/back1.jpg") no-repeat;
     background-position: center;
     background-size: cover;
     color: white;
   }
   .card-header {
-    background: url("static/back1.jpg") no-repeat;
+    background: url("../static/back1.jpg") no-repeat;
     background-position: center;
     background-size: cover;
     height: 70px;
@@ -65,7 +65,7 @@
 {% block content %}
 <div
   style="
-    background: url('static/background.jpg') no-repeat;
+    background: url('../static/background.avif') no-repeat;
     background-size: cover;
     background-position: center;
     height: 900px;
@@ -76,38 +76,73 @@
       <div class="col-sm-5">
         <div class="card">
           <div class="card-header">
-            <p style="margin-top: 6px">Add Organization</p>
+            <p style="margin-top: 6px">Edit Event</p>
           </div>
           <div class="card-body">
             <div class="container mb-2">
               <div class="row justify-content-center">
-                <form action="/add_organization" method="POST">
+                <form action="/editevent/{{data.id}}" method="POST">
                   <div class="mb-3" style="margin-top: 30px">
                     <label class="form-label">Name</label>
                     <input
                       type="text"
                       class="form-control"
                       name="name"
+                      value="{{data.name}}"
                       required
                     />
                   </div>
                   <div class="mb-3">
-                    <label class="form-label">Email</label>
+                    <label class="form-label">Description</label>
                     <input
-                      type="email"
-                      class="form-control"
-                      name="email"
-                      required
-                    />
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Location</label>
-                    <input
+                      name="description"
                       type="text"
+                      value="{{data.description}}"
                       class="form-control"
-                      name="location"
                       required
                     />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Date</label>
+                    <input
+                      type="date"
+                      class="form-control"
+                      value="{{data.date}}"
+                      name="date"
+                      required
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Time</label>
+                    <input
+                      type="time"
+                      value="{{data.time}}"
+                      class="form-control"
+                      name="time"
+                      required
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" name="category" required>
+                      <option value="{{data.category}}" selected>
+                        {{data.category}}
+                      </option>
+                      <option value="Technical">Technical</option>
+                      <option value="Non-Technical">Non-Technical</option>
+                      <option value="Mega">Mega</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Assigned Co-Organizer</label>
+                    <select class="form-select" name="co-organizer" required>
+                      <option value="{{data.coOrganizer}}" selected>
+                        {{data.coOrganizer}}
+                      </option>
+                      {% for i in coorg %}
+                      <option value="{{i.name}}">{{i.name}}</option>
+                      {% endfor %}
+                    </select>
                   </div>
                   <div class="row justify-content-center">
                     <button type="submit" id="button1" class="btn btn-primarys">

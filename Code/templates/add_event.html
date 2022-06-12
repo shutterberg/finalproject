@@ -1,6 +1,6 @@
-{% extends "admin_layout.html" %}
+{% extends "organizer_layout.html" %}
 <!--title part-->
-{% block title %}Add Organization{% endblock %}
+{% block title %}Add Event{% endblock %}
 <!--head part-->
 {% block head %} {{ super() }}
 <style>
@@ -76,12 +76,12 @@
       <div class="col-sm-5">
         <div class="card">
           <div class="card-header">
-            <p style="margin-top: 6px">Add Organization</p>
+            <p style="margin-top: 6px">Add Event</p>
           </div>
           <div class="card-body">
             <div class="container mb-2">
               <div class="row justify-content-center">
-                <form action="/add_organization" method="POST">
+                <form action="/addevent" method="POST">
                   <div class="mb-3" style="margin-top: 30px">
                     <label class="form-label">Name</label>
                     <input
@@ -92,22 +92,49 @@
                     />
                   </div>
                   <div class="mb-3">
-                    <label class="form-label">Email</label>
+                    <label class="form-label">Description</label>
                     <input
-                      type="email"
+                      name="description"
+                      type="text"
                       class="form-control"
-                      name="email"
                       required
                     />
                   </div>
                   <div class="mb-3">
-                    <label class="form-label">Location</label>
+                    <label class="form-label">Date</label>
                     <input
-                      type="text"
+                      type="date"
                       class="form-control"
-                      name="location"
+                      name="date"
                       required
                     />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Time</label>
+                    <input
+                      type="time"
+                      class="form-control"
+                      name="time"
+                      required
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" name="category" required>
+                      <option selected>Open this select menu</option>
+                      <option value="Technical">Technical</option>
+                      <option value="Non-Technical">Non-Technical</option>
+                      <option value="Mega">Mega</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Assigned Co-Organizer</label>
+                    <select class="form-select" name="co-organizer" required>
+                      <option selected>Open this select menu</option>
+                      {% for i in data %}
+                      <option value="{{i.name}}">{{i.name}}</option>
+                      {% endfor %}
+                    </select>
                   </div>
                   <div class="row justify-content-center">
                     <button type="submit" id="button1" class="btn btn-primarys">
