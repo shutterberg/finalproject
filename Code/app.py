@@ -39,9 +39,9 @@ class Participant(db.Model):
     phone = db.Column(db.String(11), nullable=False, unique=True)
     password = db.Column(db.String(255),nullable=False)
     category = db.Column(db.String(50),nullable=False)
-    event_id = db.Column(db.Integer,nullable=True,unique=True)
+    event_id = db.Column(db.Integer,db.ForeignKey('event.id'))
 
-    def __repr__(self):
+    def _repr_(self):
         return '<Participant %r>' % self.email
 
 class Organization(db.Model):
@@ -50,7 +50,7 @@ class Organization(db.Model):
     email = db.Column(db.String(100),nullable=False,unique=True)
     location = db.Column(db.String(100),nullable=False)
 
-    def __repr__(self):
+    def _repr_(self):
         return '<Organization %r>' % self.email
 
 class CoOrganizer(db.Model):
@@ -60,10 +60,10 @@ class CoOrganizer(db.Model):
     phone = db.Column(db.String(11), nullable=False, unique=True)
     password = db.Column(db.String(255),nullable=False)
     organizer = db.Column(db.String(50),nullable=False)
-    #events = db.relationship('Event',backref='owner')
+    #coorg_id=db.relationship('Event',cascade="all,delete",backref='owner')
     
-    def __repr__(self):
-        return '<CoOrganizer %r>' % self.email
+    def _repr_(self):
+        return '<coorganizer %r>' % self.email
 
 class Event(db.Model):
     id = db.Column(db.Integer,primary_key=True)
@@ -74,6 +74,8 @@ class Event(db.Model):
     category = db.Column(db.String(50),nullable=False)
     coOrganizer = db.Column(db.String(50),nullable=False)
     organizer = db.Column(db.String(50),nullable=False)
+    judge = db.Column(db.String(50),nullable=True)
+    participant_id=db.relationship('Participant',cascade="all,delete",backref='participants')
 
     def __repr__(self):
         return '<Event %r>' % self.name
@@ -82,6 +84,16 @@ class Alert(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     attendee = db.Column(db.String(50),nullable=False)
     organizer = db.Column(db.String(50),nullable=False)
+
+    def __repr__(self):
+        return self.attendee
+
+class Judge(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    name = db.Column(db.String(50),nullable=False)
+    email = db.Column(db.String(50),nullable=False)
+    password = db.Column(db.String(255),nullable=False)
+    event = db.Column(db.String(50),nullable=False)
 
     def __repr__(self):
         return self.attendee
@@ -626,7 +638,11 @@ def organizerdash():
 
 @app.route("/organizer_profile")
 def organizer_profile():
-    return render_template('organizer_profile.html')
+    if 'organizer' in session:
+        return render_template('organizer_profile.html')
+    else:
+        flash("Session Expired", "error")
+        return redirect(url_for("organizer_log"))
 
 @app.route("/organizer_profile_update")
 def organizer_profile_update():
@@ -920,7 +936,6 @@ def editevent(id):
             category = request.form['category']
             coOrganizer = request.form['co-organizer']
             name_check = Event.query.filter_by(name=name).first()
-            print(name_check.id)
             if not name_check:
                 event.name = name
                 event.description = description
@@ -1052,7 +1067,6 @@ def send_alert():
         flash("Session Expired","error")
         return redirect(url_for('organizer_log'))
 
-#novin
 @app.route("/sendalert",methods=["POST"])
 def sendalert():
     if request.method == 'POST':
@@ -1060,18 +1074,23 @@ def sendalert():
             subject = request.form['subject']
             messages = request.form['message']
             attendees = Alert.query.all()
-            print(attendees)
-            for i in attendees:
-                message = Mail(
+            if attendees:
+                recp=[]
+                for i in attendees:
+                    recp.append(str(i))
+                    message = Mail(
                 from_email=("eventxsjec@gmail.com", "EventX"),
-                to_emails=To(i),
-                subject=subject,
-                html_content=messages)
-                sg = SendGridAPIClient(
-                "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")
-                sg.send(message)
-            flash("Alert message broadcasted","success")
-            return redirect(url_for('send_alert'))
+                    to_emails=recp,
+                    subject=subject,
+                    html_content=messages)
+                    sg = SendGridAPIClient(
+                    "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")
+                    sg.send(message)
+                flash("Alert message broadcasted","success")
+                return redirect(url_for('send_alert'))
+            else:
+                flash("Add atleast one attendee","error")
+                return redirect(url_for('send_alert'))
         else:
             flash("Session Expired","error")
             return redirect(url_for('organizer_log'))
@@ -1155,7 +1174,11 @@ def coOrganizerdash():
 
 @app.route("/coOrganizer_profile")
 def coOrganizer_profile():
-    return render_template('coOrganizer_profile.html')
+    if 'coOrganizer' in session:
+        return render_template('coOrganizer_profile.html')
+    else:
+        flash("Session Expired", "error")
+        return redirect(url_for("coOrganizer_log"))
 
 @app.route("/coOrganizer_profile_update")
 def coOrganizer_profile_update():
@@ -1368,7 +1391,118 @@ def change_coOrganizer_pass():
         flash('Unauthorized access','error')
         return redirect(url_for('home'))
 
+@app.route("/coOrganizer_view_event")
+def coOrganizer_view_event():
+    if 'coOrganizer' in session:
+        events = Event.query.filter_by(coOrganizer=session['coOrganizer_name'])
+        return render_template('coOrganizer_view_event.html',data=events)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('coOrganizer_log'))
 
+@app.route("/coOrganizer_event_page/<int:id>",methods=['POST'])
+def coOrganizer_event_page(id):
+    if 'coOrganizer' in session:
+        get_event_data = Event.query.filter_by(id=id).first()
+        return render_template('coOrganizer_event_page.html',data=get_event_data)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('coOrganizer_log'))
+
+@app.route("/coOrganizer_event_update/<int:id>",methods=['GET','POST'])
+def coOrganizer_event_update(id):
+    if 'coOrganizer' in session:
+        event = Event.query.filter_by(id=id).first()
+        judge = Judge.query.all()
+        return render_template('coOrganizer_event_update.html',data=event,judge=judge)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('coOrganizer_log'))
+
+@app.route("/coOrganizer_update_event/<int:id>",methods=["POST"])
+def coOrganizer_update_event(id):
+    if request.method == 'POST':
+        if 'coOrganizer' in session:
+            event = Event.query.filter_by(id=id).first()
+            name = request.form['name']
+            description = request.form['description']     
+            date = request.form['date']
+            time = request.form['time']
+            category = request.form['category']
+            name_check = Event.query.filter_by(name=name).first()
+            if not name_check:
+                event.name = name
+                event.description = description
+                event.date = date
+                event.time = time
+                event.category = category
+                db.session.commit()
+                flash('Event updated successfully','success')
+                return redirect(url_for('coOrganizer_view_event'))
+            elif name_check.id == id:
+                event.description = description
+                event.date = date
+                event.time = time
+                event.category = category
+                db.session.commit()
+                flash('Event updated successfully','success')
+                return redirect(url_for('coOrganizer_view_event'))
+            else: 
+                flash("Name already used","error")
+                return redirect(url_for('coOrganizer_view_event'))
+        else:
+            flash("Session Expired","error")
+            return redirect(url_for('coOrganizer_log'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+@app.route("/judge")
+def judge():
+    if 'coOrganizer' in session:
+        events = Event.query.filter_by(coOrganizer=session['coOrganizer_name']).all()
+        if not events:
+            flash("No events assigned to you","error")
+            return redirect(url_for('coOrganizerdash'))
+        else:
+            return render_template('add_judge.html',data=events)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('coOrganizer_log'))
+
+@app.route("/add_judge",methods=["POST"])
+def add_judge():
+    if request.method == 'POST':
+        if 'coOrganizer' in session:
+            name = request.form['name']
+            email = request.form['email']     
+            event = request.form['event']  
+            email_check = Judge.query.filter_by(email=email).first()
+            event_data = Event.query.filter_by(name=event).first()
+            if not email_check:
+                name_check = Judge.query.filter_by(name=name).first()
+                if not name_check:
+                    hash_pass = sha256_crypt.hash(email)
+                    judge = Judge(name=name,email=email,password=hash_pass,event=event)
+                    event_data.judge = name
+                    db.session.add(judge)
+                    db.session.commit()
+                    flash('Judge added successfully','success')
+                    return redirect(url_for('coOrganizerdash'))
+                else:
+                    flash("Name already used","error")
+                    return redirect(url_for('judge'))
+            else:
+                flash("Email ID already used","error")
+                return redirect(url_for('judge'))
+        else:
+            flash("Session Expired","error")
+            return redirect(url_for('coOrganizerlog'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
 
 #logout function for all
 @app.route("/logout")
