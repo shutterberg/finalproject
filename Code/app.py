@@ -27,7 +27,8 @@ class Organizer(db.Model):
     phone = db.Column(db.String(11), nullable=False, unique=True)
     password = db.Column(db.String(255),nullable=False)
     organization = db.Column(db.String(255),nullable=False)
-    #events = db.relationship('Event',backref='owner')
+    event_org_id=db.relationship('Event',cascade="all,delete",backref='owner')
+    alert_org_id=db.relationship('Alert',cascade="all,delete",backref='owner')
 
     def __repr__(self):
         return '<Organizer %r>' % self.email
@@ -53,7 +54,7 @@ class Organization(db.Model):
     def _repr_(self):
         return '<Organization %r>' % self.email
 
-class CoOrganizer(db.Model):
+class Coorganizer(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     name = db.Column(db.String(50),nullable=False)
     email = db.Column(db.String(100),nullable=False,unique=True)
@@ -73,9 +74,10 @@ class Event(db.Model):
     time = db.Column(db.String(50), nullable=False)
     category = db.Column(db.String(50),nullable=False)
     coOrganizer = db.Column(db.String(50),nullable=False)
-    organizer = db.Column(db.String(50),nullable=False)
+    org_id = db.Column(db.Integer,db.ForeignKey('organizer.id'))
     judge = db.Column(db.String(50),nullable=True)
     participant_id=db.relationship('Participant',cascade="all,delete",backref='participants')
+    judge_event_id=db.relationship('Judge',cascade="all,delete",backref='ownersj')
 
     def __repr__(self):
         return '<Event %r>' % self.name
@@ -83,7 +85,7 @@ class Event(db.Model):
 class Alert(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     attendee = db.Column(db.String(50),nullable=False)
-    organizer = db.Column(db.String(50),nullable=False)
+    org_id = db.Column(db.Integer,db.ForeignKey('organizer.id'))
 
     def __repr__(self):
         return self.attendee
@@ -93,7 +95,7 @@ class Judge(db.Model):
     name = db.Column(db.String(50),nullable=False)
     email = db.Column(db.String(50),nullable=False)
     password = db.Column(db.String(255),nullable=False)
-    event = db.Column(db.String(50),nullable=False)
+    event_id = db.Column(db.Integer,db.ForeignKey('event.id'))
 
     def __repr__(self):
         return self.attendee
@@ -629,7 +631,7 @@ def organizerlog():
 @app.route("/organizerdash")
 def organizerdash():
     if 'organizer' in session:
-        co_organizers = CoOrganizer.query.count()
+        co_organizers = Coorganizer.query.count()
         events = Event.query.count()
         return render_template('organizer_dash.html',data=[co_organizers,events])
     else:
@@ -858,12 +860,12 @@ def change_organizer_pass():
 @app.route("/add_event")
 def add_event():
     if 'organizer' in session:
-        coOrganizer = CoOrganizer.query.count()
+        coOrganizer = Coorganizer.query.count()
         if not coOrganizer:
             flash("Add Co-organizer to be assigned first","error")
             return redirect(url_for('organizerdash'))
         else:
-            get_coOrganizer_data = CoOrganizer.query.all()
+            get_coOrganizer_data = Coorganizer.query.all()
             return render_template('add_event.html',data=get_coOrganizer_data)
     else:
         flash("Session Expired","error")
@@ -880,7 +882,7 @@ def addevent():
             time = request.form['time']
             category = request.form['category']
             coOrganizer = request.form['co-organizer']
-            data = CoOrganizer.query.filter_by(name=coOrganizer).first()
+            data = Coorganizer.query.filter_by(name=coOrganizer).first()
             email = data.email
             name_check = Event.query.filter_by(name=name).first()
             if not name_check:
@@ -914,7 +916,7 @@ def view_event():
 def edit_event(id):
     if 'organizer' in session:
         event = Event.query.filter_by(id=id).first()
-        get_coOrganizer_data = CoOrganizer.query.all()
+        get_coOrganizer_data = Coorganizer.query.all()
         if session['organizer_name'] == str(event.organizer):
             return render_template('edit_event.html',data=event,coorg = get_coOrganizer_data)
         else:
@@ -945,7 +947,7 @@ def editevent(id):
                 if event.coOrganizer != coOrganizer:
                     event.coOrganizer = coOrganizer
                     db.session.commit()
-                    data = CoOrganizer.query.filter_by(name=coOrganizer).first()
+                    data = Coorganizer.query.filter_by(name=coOrganizer).first()
                     email = data.email
                     send_mail(email,"Event Alloted!","You have been assigned to co-ordinate the "+str(name).upper()+" event. Please login into your dashboard and check for the event details.")
                     flash('Event updated successfully','success')
@@ -962,7 +964,7 @@ def editevent(id):
                 if event.coOrganizer != coOrganizer:
                     event.coOrganizer = coOrganizer
                     db.session.commit()
-                    data = CoOrganizer.query.filter_by(name=coOrganizer).first()
+                    data = Coorganizer.query.filter_by(name=coOrganizer).first()
                     email = data.email
                     send_mail(email,"Event Alloted!","You have been assigned to co-ordinate the "+str(name).upper()+" event. Please login into your dashboard and check for the event details.")
                     flash('Event updated successfully','success')
@@ -1012,12 +1014,12 @@ def addcoOrganizer():
             name = request.form['name']
             email = request.form['email']     
             phone = request.form['phone']
-            email_check = CoOrganizer.query.filter_by(email=email).first()
+            email_check = Coorganizer.query.filter_by(email=email).first()
             if not email_check:
-                phone_check = CoOrganizer.query.filter_by(phone=phone).first()
+                phone_check = Coorganizer.query.filter_by(phone=phone).first()
                 if not phone_check:
                     hash_pass = sha256_crypt.hash(email)
-                    coOrganizer = CoOrganizer(name=name,email=email,phone=phone,password=hash_pass,organizer=organizer)
+                    coOrganizer = Coorganizer(name=name,email=email,phone=phone,password=hash_pass,organizer=organizer)
                     db.session.add(coOrganizer)
                     db.session.commit()
                     send_mail(email,"You are a Co-Organizer!","You have been successfully added as a CO-ORGANIZER under the organization "+str(organization).upper()+". Please use your email as your password on your first login and change it by clicking the change password option")
@@ -1040,7 +1042,7 @@ def addcoOrganizer():
 @app.route("/view_coOrganizer")
 def view_coOrganizer():
     if 'organizer' in session:
-        coorgs = CoOrganizer.query.all()
+        coorgs = Coorganizer.query.all()
         return render_template('view_coOrganizer.html',data=coorgs)
     else:
         flash("Session Expired","error")
@@ -1049,7 +1051,7 @@ def view_coOrganizer():
 @app.route("/del_coOrganizer/<int:id>")
 def del_coOrganizer(id):
     if 'organizer' in session:
-        coOrganizer = CoOrganizer.query.filter_by(id=id).first()
+        coOrganizer = Coorganizer.query.filter_by(id=id).first()
         db.session.delete(coOrganizer)
         db.session.commit()
         flash("Co-Organizer deleted successfully","success")
@@ -1138,7 +1140,7 @@ def coOrganizerlog():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        response = CoOrganizer.query.filter_by(email=email).first()
+        response = Coorganizer.query.filter_by(email=email).first()
         if not response:
             flash("Email ID not registered",'error')
             return redirect(url_for("coOrganizer_log"))   
@@ -1164,7 +1166,7 @@ def coOrganizerlog():
 @app.route("/coOrganizerdash")
 def coOrganizerdash():
     if 'coOrganizer' in session:
-        """ co_organizers = CoOrganizer.query.count()
+        """ co_organizers = Coorganizer.query.count()
         events = Event.query.count() """
         return render_template('coOrganizer_dash.html')
     else:
@@ -1183,7 +1185,7 @@ def coOrganizer_profile():
 @app.route("/coOrganizer_profile_update")
 def coOrganizer_profile_update():
     if 'coOrganizer' in session:
-        get_coOrganizer_data = CoOrganizer.query.filter_by(id=session['coOrganizer_id']).first()
+        get_coOrganizer_data = Coorganizer.query.filter_by(id=session['coOrganizer_id']).first()
         return render_template('coOrganizer_profupdate.html',data=get_coOrganizer_data)
     else:
         flash("Session Expired", "error")
@@ -1196,12 +1198,12 @@ def update_coOrganizer_profile(id):
         if request.method == 'POST':
             name = request.form['name']
             phno = request.form['phno']
-            data = CoOrganizer.query.filter_by(id=id).first()
-            phno_check = CoOrganizer.query.filter_by(phone=phno).first()
+            data = Coorganizer.query.filter_by(id=id).first()
+            phno_check = Coorganizer.query.filter_by(phone=phno).first()
             if phno_check:
                 if(phno_check.id != id):
                     flash("Phone number is already used by someone else","error")
-                    data = CoOrganizer.query.filter_by(id=id).first()
+                    data = Coorganizer.query.filter_by(id=id).first()
                     return render_template('coOrganizer_profupdate.html',data=data)
                 elif(phno_check.id == id):
                     data.phone = phno
@@ -1228,7 +1230,7 @@ def update_coOrganizer_profile(id):
 @app.route("/change_pass_coOrganizer")
 def change_pass_coOrganizer():
     if 'coOrganizer' in session:
-        get_coOrganizer_data = CoOrganizer.query.filter_by(id=session['coOrganizer_id']).first()
+        get_coOrganizer_data = Coorganizer.query.filter_by(id=session['coOrganizer_id']).first()
         return render_template('change_pass_coOrganizer.html',data=get_coOrganizer_data) 
     else:
         flash("Session Expired", "error")
@@ -1239,7 +1241,7 @@ def change_pass_coOrganizer():
 def coOrganizer_change_pass(email):
     if request.method == 'POST':
         if 'coOrganizer' in session:
-            data = CoOrganizer.query.filter_by(email=email).first()
+            data = Coorganizer.query.filter_by(email=email).first()
             pass1 = request.form['pass1']
             flag = 0
             while True:  
@@ -1294,7 +1296,7 @@ def coOrganizer_forpass():
 def coOrganizer_send_otp():
     if request.method == 'POST':
         email = request.form['email']
-        email_check = CoOrganizer.query.filter_by(email=email).first()
+        email_check = Coorganizer.query.filter_by(email=email).first()
         if email_check:
             session['coOrganizer'] = True
             session['email'] = email_check.email
@@ -1373,7 +1375,7 @@ def change_coOrganizer_pass():
             pass2 = request.form['pass2']
             if pass1 == pass2:
                 hash_pass = sha256_crypt.hash(pass1)
-                data = CoOrganizer.query.filter_by(email=session['email']).first()
+                data = Coorganizer.query.filter_by(email=session['email']).first()
                 data.password = hash_pass
                 db.session.commit()
                 session.pop('coOrganizer',None)
