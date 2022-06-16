@@ -264,7 +264,9 @@ def participant_login():
 @app.route("/participantdash")
 def participantdash():
     if 'participant' in session:
-        return render_template('participant_dash.html')
+        events = Event.query.count()
+        reg_event = Plist.query.filter_by(part_id=session['participant_id']).count()
+        return render_template('participant_dash.html',data=[events,reg_event])
     else:
         flash("Session Expired", "error")
         return redirect(url_for("participantlog"))
@@ -377,7 +379,11 @@ def change_participant_pass():
 
 @app.route("/participant_profile")
 def participant_profile():
-    return render_template('participant_profile.html')
+    if 'participant' in session:
+        return render_template('participant_profile.html')
+    else:
+            flash("Session Expired","error")
+            return redirect(url_for('participantlog'))
 
 @app.route("/participant_profile_update")
 def participant_profile_update():
@@ -918,7 +924,6 @@ def addevent():
 def view_event():
     if 'organizer' in session:
         events = Event.query.all()
-        org=Organizer.query.all()
         for i in events:
             data1 = Organizer.query.filter_by(id=i.org_id).first()
             i.org_id=data1.name
@@ -1427,8 +1432,10 @@ def coOrganizer_event_page(id):
 def coOrganizer_event_update(id):
     if 'coorganizer' in session:
         event = Event.query.filter_by(id=id).first()
-        judge = Judge.query.all()
-        return render_template('coOrganizer_event_update.html',data=event,judge=judge)
+        judge = Judge.query.filter_by(event_id=id).all()
+        org_id = event.org_id
+        organizer = Organizer.query.filter_by(id=org_id).first()
+        return render_template('coOrganizer_event_update.html',data=event,judge=judge,organizer=organizer)
     else:
         flash("Session Expired","error")
         return redirect(url_for('coOrganizer_log'))
@@ -1571,6 +1578,7 @@ def judgelog():
                 session['judge_name'] = response.name
                 session['judge_email'] = response.email
                 session['judge_phone'] = response.phone
+                session['event_id'] = response.event_id
                 flash('You were successfully logged in',"success")
                 return redirect(url_for("judgedash"))
             else:
@@ -1812,6 +1820,62 @@ def change_judge_pass():
             else:
                 flash("Passwords dont match",'error')
                 return redirect(url_for('judge_forpass_form'))
+        else:
+            flash("Session Expired","error")
+            return redirect(url_for('judge_log'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+@app.route("/participant_registered_event")
+def participant_registered_event():
+    if 'participant' in session:
+        event_names = []
+        par_data = Plist.query.filter_by(part_id=session['participant_id']).all()
+        for i in par_data:
+            data1 = Event.query.filter_by(id = i.event_id).first()
+            event_names.append(data1)
+        return render_template('participant_registered_event.html',data=event_names)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('participantlog'))
+
+@app.route("/unregister_event/<int:id>")
+def unregister_event(id):
+    if 'participant' in session:
+        part_id = session['participant_id']
+        del_p = Plist.query.filter_by(part_id = part_id,event_id=id).first()
+        db.session.delete(del_p)
+        db.session.commit()
+        flash("Unregistered successfully","success")
+        return redirect(url_for("participantdash"))
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('participantlog'))
+
+@app.route("/judge_event")
+def judge_event():
+    if 'judge' in session:
+        event = Event.query.filter_by(id=session['event_id']).first()
+        participants = Plist.query.filter_by(event_id=session['event_id']).all()
+        for i in participants:
+            pname = Participant.query.filter_by(id=i.part_id).first()
+            i.pname = pname.name
+        return render_template('judge_event.html',data=event,data2=participants)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('judge_log'))
+
+@app.route("/add_score/<int:id>",methods=["POST"])
+def add_score(id):
+    if request.method == 'POST':
+        if 'judge' in session:
+            score = request.form['mark']
+            part_data = Plist.query.filter_by(id=id).first()
+            part_data.score = score
+            db.session.commit()
+            return redirect(url_for("judge_event"))
         else:
             flash("Session Expired","error")
             return redirect(url_for('judge_log'))

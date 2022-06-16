@@ -1,4 +1,4 @@
-{% extends "participant_layout.html" %}
+{% extends "judge_layout.html" %}
 <!--title part-->
 {% block title %}Update Profile{% endblock %}
 <!--head part-->
@@ -53,7 +53,7 @@
           <div class="container">
             <form
               method="POST"
-              action="/update_participant_profile/{{data.id}}"
+              action="/update_judge_profile/{{data.id}}"
             >
               <div class="mb-3" style="margin-top: 10px">
                 <label class="form-label"> Name </label>
@@ -86,16 +86,6 @@
                   value="{{data.phone}}"
                   required
                 />
-              </div>
-              <div class="mb-3" style="margin-top: 10px">
-                <label class="form-label">Category</label>
-                    <select class="form-select" name="category" required>
-                      <option selected>{{data.category}}</option>
-                      <option value="Primary">Primary</option>
-                      <option value="High School">High School</option>
-                      <option value="PU">PU</option>
-                      <option value="Graduate">Graduate</option>
-                    </select>
               </div>
               <div class="row justify-content-center">
                 <button type="submit" id="button1" class="btn btn-primarys">

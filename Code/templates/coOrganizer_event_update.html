@@ -60,6 +60,23 @@
     }
   }
 </style>
+<script>
+  function deljudge(judge_id) {
+    var id = judge_id;
+    var path = "/del_judge/" + id;
+    swal({
+      title: "Are you sure?",
+      icon: "warning",
+      text: "You won't be able to revert this!",
+      buttons: true,
+      dangerMode: true
+    }).then(confirm => {
+      if (confirm) {
+        window.location.replace(path);
+      }
+    });
+  }
+</script>
 {% endblock %}
 <!--content part-->
 {% block content %}
@@ -136,51 +153,62 @@
                       <option value="Mega">Mega</option>
                     </select>
                   </div>
-                  {%if not data['judge']%}
-                  <div class="mb-3">
-                    <label class="form-label">Judge</label>
+                  <div class="mb-3" style="margin-top: 10px">
+                    <label class="form-label">Event Added By</label>
                     <input
+                      name="organizer"
                       type="text"
-                      value="Yet to be added"
+                      value="{{organizer.name}}"
                       class="form-control"
-                      name="time"
                       readonly
                     />
-                    {%else%}
-                    <div class="mb-3">
-                      <label class="form-label">Judge</label>
-                      <select class="form-select" name="judge" required>
-                        <option value="{{data.judge}}" selected>
-                          {{data.judge}}
-                        </option>
-                        {% for i in judge %}
-                        <option value="{{i.name}}">{{i.name}}</option>
-                        {% endfor %}
-                      </select>
-                    </div>
-                    {%endif%}
-                    <div class="mb-3" style="margin-top: 10px">
-                      <label class="form-label">Event Added By</label>
-                      <input
-                        name="organizer"
-                        type="text"
-                        value="{{data.organizer}}"
-                        class="form-control"
-                        readonly
-                      />
-                    </div>
-                    <div class="row justify-content-center">
-                      <button
-                        type="submit"
-                        id="button1"
-                        class="btn btn-primarys"
-                      >
-                        Submit
-                      </button>
-                    </div>
-                    {% endblock %}
+                  </div>
+                  <div class="row justify-content-center">
+                    <button type="submit" id="button1" class="btn btn-primarys">
+                      Submit
+                    </button>
                   </div>
                 </form>
+                {%if not judge%}
+                <p
+                  style="
+                    color: red;
+                    text-align: center;
+                    text-transform: uppercase;
+                    font-weight: bold;
+                  "
+                >
+                  Judges yet to be added
+                </p>
+                {%else%}
+                <div class="table-responsive" style="text-align: center">
+                  <table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                      <tr>
+                        <th scope="col">Judge</th>
+                        <th scope="col">Delete</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for i in judge %}
+                      <tr>
+                        <td>{{i.name}}</td>
+                        <td>
+                          <a onclick="deljudge('{{ i.id }}')"
+                            ><button
+                              class="btn btn-danger"
+                              type="submit"
+                              name="del"
+                            >
+                              <i class="fa fa-trash"></i></button
+                          ></a>
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                {%endif%} {% endblock %}
               </div>
             </div>
           </div>
