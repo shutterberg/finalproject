@@ -41,6 +41,7 @@ class Participant(db.Model):
     password = db.Column(db.String(255),nullable=False)
     category = db.Column(db.String(50),nullable=False)
     event_id = db.Column(db.Integer,db.ForeignKey('event.id'))
+    pevent_id=db.relationship('Plist',cascade="all,delete",backref='owner')
 
     def _repr_(self):
         return '<Participant %r>' % self.email
@@ -78,6 +79,7 @@ class Event(db.Model):
     judge = db.Column(db.String(50),nullable=True)
     participant_id=db.relationship('Participant',cascade="all,delete",backref='participants')
     judge_event_id=db.relationship('Judge',cascade="all,delete",backref='ownersj')
+    part_event_id=db.relationship('Plist',cascade="all,delete",backref='ownersjp')
 
     def __repr__(self):
         return '<Event %r>' % self.name
@@ -99,6 +101,12 @@ class Judge(db.Model):
 
     def __repr__(self):
         return self.attendee
+
+class Plist(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    part_id = db.Column(db.Integer,db.ForeignKey('participant.id'),nullable=True)
+    event_id = db.Column(db.Integer,db.ForeignKey('event.id'),nullable=True)
+    score=db.Column(db.Integer,nullable=True)
 
 db.create_all()
 #db.drop_all()
@@ -1513,6 +1521,26 @@ def participant_view_event():
     if 'participant' in session:
         events = Event.query.all()
         return render_template('participant_view_event.html',data=events)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('participantlog'))
+
+#participant reg event
+@app.route("/participant_event_register/<int:id>",methods=['GET','POST'])
+def participant_event_register(id):
+    if 'participant' in session:
+        part_id=session['participant_id']
+        entry_check = Plist.query.filter_by(part_id=part_id,event_id=id).first()
+        if entry_check is None:
+            part = Plist(part_id=part_id,event_id=id)
+            db.session.add(part)
+            db.session.commit()
+            flash('Registration Sucessful for event','success')
+            return redirect(url_for('participant_view_event'))
+        else:
+            flash('Already Registered','error')
+            return redirect(url_for('participant_view_event'))
+
     else:
         flash("Session Expired","error")
         return redirect(url_for('participantlog'))
