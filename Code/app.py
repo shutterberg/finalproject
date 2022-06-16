@@ -63,6 +63,7 @@ class Coorganizer(db.Model):
     password = db.Column(db.String(255),nullable=False)
     organizer = db.Column(db.String(50),nullable=False)
     coorg_id=db.relationship('Event',cascade="all,delete",backref='owner1')
+    jcoorg_id=db.relationship('Judge',cascade="all,delete",backref='owner1j')
     
     def _repr_(self):
         return '<coorganizer %r>' % self.email
@@ -76,7 +77,6 @@ class Event(db.Model):
     category = db.Column(db.String(50),nullable=False)
     coorg_mail = db.Column(db.String(80),db.ForeignKey('coorganizer.email'))
     org_id = db.Column(db.Integer,db.ForeignKey('organizer.id'))
-    judge = db.Column(db.String(50),nullable=True)
     participant_id=db.relationship('Participant',cascade="all,delete",backref='participants')
     judge_event_id=db.relationship('Judge',cascade="all,delete",backref='ownersj')
     part_event_id=db.relationship('Plist',cascade="all,delete",backref='ownersjp')
@@ -99,6 +99,7 @@ class Judge(db.Model):
     email = db.Column(db.String(50),nullable=False)
     password = db.Column(db.String(255),nullable=False)
     event_id = db.Column(db.Integer,db.ForeignKey('event.id'))
+    coorg_mail = db.Column(db.String(80),db.ForeignKey('coorganizer.email'))
 
     def __repr__(self):
         return self.attendee
@@ -109,7 +110,7 @@ class Plist(db.Model):
     event_id = db.Column(db.Integer,db.ForeignKey('event.id'),nullable=True)
     score=db.Column(db.Integer,nullable=True)
 
-db.create_all()
+#db.create_all()
 #db.drop_all()
 
 #home page
@@ -212,7 +213,7 @@ def participant_register():
                 participant = Participant(name=name,email=email,phone=phone,category=category,password=hash_pass)
                 db.session.add(participant)
                 db.session.commit()
-                #send_mail(email,"Registration Successfull","Thank you for registering on our website.Hope you have a good experience")
+                send_mail(email,"Registration Successfull","Thank you for registering on our website.Hope you have a good experience")
                 flash('Registeration successfully','success')
                 return redirect(url_for('participantlog'))
             else:
@@ -283,7 +284,7 @@ def participant_send_otp():
             session['email'] = email_check.email
             otp = random.randint(000000,999999)
             session['otp'] = otp
-            #send_mail(email,'OTP for Password change',"Dear participant, your verification code is: " + str(otp))
+            send_mail(email,'OTP for Password change',"Dear participant, your verification code is: " + str(otp))
             flash("OTP sent","success")
             return redirect(url_for("participant_otp"))
         else:
@@ -587,7 +588,7 @@ def add_organizer():
                     organizer = Organizer(name=name,email=email,phone=phone,password=hash_pass,organization=organization)
                     db.session.add(organizer)
                     db.session.commit()
-                    #send_mail(email,"You are a Organizer!","You have been successfully added as a ORGANIZER under the organization "+str(organization).upper()+". Please use your email as your password on your first login and change it by clicking the change password option")
+                    send_mail(email,"You are a Organizer!","You have been successfully added as a ORGANIZER under the organization "+str(organization).upper()+". Please use your email as your password on your first login and change it by clicking the change password option")
                     flash('Organizer added successfully','success')
                     return redirect(url_for('admin_dash'))
                 else:
@@ -775,7 +776,7 @@ def organizer_send_otp():
             session['email'] = email_check.email
             otp = random.randint(000000,999999)
             session['otp'] = otp
-            #send_mail(email,'OTP for Password change',"Dear organizer, your verification code is: " + str(otp))
+            send_mail(email,'OTP for Password change',"Dear organizer, your verification code is: " + str(otp))
             flash("OTP sent","success")
             return redirect(url_for("organizer_otp"))
         else:
@@ -917,6 +918,10 @@ def addevent():
 def view_event():
     if 'organizer' in session:
         events = Event.query.all()
+        org=Organizer.query.all()
+        for i in events:
+            data1 = Organizer.query.filter_by(id=i.org_id).first()
+            i.org_id=data1.name
         return render_template('view_event.html',data=events)
     else:
         flash("Session Expired","error")
@@ -927,7 +932,7 @@ def edit_event(id):
     if 'organizer' in session:
         event = Event.query.filter_by(id=id).first()
         get_coOrganizer_data = Coorganizer.query.all()
-        if session['organizer_name'] == str(event.organizer):
+        if session['organizer_id'] == int(event.org_id):
             return render_template('edit_event.html',data=event,coorg = get_coOrganizer_data)
         else:
             flash("You can only edit the events added by you","error")
@@ -954,12 +959,10 @@ def editevent(id):
                 event.date = date
                 event.time = time
                 event.category = category
-                if event.coOrganizer != coOrganizer:
-                    event.coOrganizer = coOrganizer
+                if event.coorg_mail != coOrganizer:
+                    event.coorg_mail = coOrganizer
                     db.session.commit()
-                    data = Coorganizer.query.filter_by(name=coOrganizer).first()
-                    email = data.email
-                    send_mail(email,"Event Alloted!","You have been assigned to co-ordinate the "+str(name).upper()+" event. Please login into your dashboard and check for the event details.")
+                    send_mail(coOrganizer,"Event Alloted!","You have been assigned to co-ordinate the "+str(name).upper()+" event. Please login into your dashboard and check for the event details.")
                     flash('Event updated successfully','success')
                     return redirect(url_for('organizerdash'))
                 else:
@@ -971,12 +974,10 @@ def editevent(id):
                 event.date = date
                 event.time = time
                 event.category = category
-                if event.coOrganizer != coOrganizer:
-                    event.coOrganizer = coOrganizer
+                if event.coorg_mail != coOrganizer:
+                    event.coorg_mail = coOrganizer
                     db.session.commit()
-                    data = Coorganizer.query.filter_by(name=coOrganizer).first()
-                    email = data.email
-                    send_mail(email,"Event Alloted!","You have been assigned to co-ordinate the "+str(name).upper()+" event. Please login into your dashboard and check for the event details.")
+                    send_mail(coOrganizer,"Event Alloted!","You have been assigned to co-ordinate the "+str(name).upper()+" event. Please login into your dashboard and check for the event details.")
                     flash('Event updated successfully','success')
                     return redirect(url_for('organizerdash'))
                 else:
@@ -1116,7 +1117,7 @@ def add_attendee(email):
     if 'organizer' in session:
         data = Alert.query.filter_by(attendee=email).first()
         if not data:
-            alert=Alert(attendee=email,organizer=session['organizer_name'])
+            alert=Alert(attendee=email,org_id=session['organizer_id'])
             db.session.add(alert)
             db.session.commit()
             flash('Attendee added successfully','success')
@@ -1176,9 +1177,9 @@ def coOrganizerlog():
 @app.route("/coOrganizerdash")
 def coOrganizerdash():
     if 'coorganizer' in session:
-        """ co_organizers = Coorganizer.query.count()
-        events = Event.query.count() """
-        return render_template('coOrganizer_dash.html')
+        events = Event.query.filter_by(coorg_mail=session['coorganizer_email']).count()
+        judges =  Judge.query.filter_by(coorg_mail=session['coorganizer_email']).count()
+        return render_template('coOrganizer_dash.html',data=[events,judges])
     else:
         flash("Session Expired", "error")
         return redirect(url_for("coOrganizer_log"))
@@ -1195,7 +1196,7 @@ def coOrganizer_profile():
 @app.route("/coOrganizer_profile_update")
 def coOrganizer_profile_update():
     if 'coorganizer' in session:
-        get_coOrganizer_data = Coorganizer.query.filter_by(id=session['coOrganizer_id']).first()
+        get_coOrganizer_data = Coorganizer.query.filter_by(id=session['coorganizer_id']).first()
         return render_template('coOrganizer_profupdate.html',data=get_coOrganizer_data)
     else:
         flash("Session Expired", "error")
@@ -1416,7 +1417,8 @@ def coOrganizer_view_event():
 def coOrganizer_event_page(id):
     if 'coorganizer' in session:
         get_event_data = Event.query.filter_by(id=id).first()
-        return render_template('coOrganizer_event_page.html',data=get_event_data)
+        get_judge_data = Judge.query.filter_by(event_id=id).all()
+        return render_template('coOrganizer_event_page.html',data=get_event_data,data2=get_judge_data)
     else:
         flash("Session Expired","error")
         return redirect(url_for('coOrganizer_log'))
@@ -1497,8 +1499,8 @@ def add_judge():
                 name_check = Judge.query.filter_by(name=name).first()
                 if not name_check:
                     hash_pass = sha256_crypt.hash(email)
-                    judge = Judge(name=name,email=email,phone=phone,password=hash_pass,event_id=event_data.id)
-                    event_data.judge = name
+                    judge = Judge(name=name,email=email,phone=phone,event_id=event_data.id,password=hash_pass,coorg_mail=session['coorganizer_email'])
+                    #event_data.judge = name
                     db.session.add(judge)
                     db.session.commit()
                     flash('Judge added successfully','success')
@@ -1640,6 +1642,18 @@ def update_judge_profile(id):
         flash("Session Expired","error")
         return redirect(url_for('judge_log'))
 
+@app.route("/del_judge/<int:id>")
+def del_judge(id):
+    if 'coorganizer' in session:
+        judge = Judge.query.filter_by(id=id).first()
+        db.session.delete(judge)
+        db.session.commit()
+        flash("Judge removed successfully","success")
+        return redirect(url_for('coOrganizerdash'))
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('coOrganizerlog'))
+
 @app.route("/change_pass_judge",methods=['GET','POST'])
 def change_pass_judge():
     if 'judge' in session:
@@ -1715,7 +1729,7 @@ def judge_send_otp():
             session['email'] = email_check.email
             otp = random.randint(000000,999999)
             session['otp'] = otp
-            #send_mail(email,'OTP for Password change',"Dear judge, your verification code is: " + str(otp))
+            send_mail(email,'OTP for Password change',"Dear judge, your verification code is: " + str(otp))
             flash("OTP sent","success")
             return redirect(url_for("judge_otp"))
         else:

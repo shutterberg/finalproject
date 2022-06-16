@@ -51,6 +51,23 @@
     padding: 0 10px;
   }
 </style>
+<script>
+  function deljudge(judge_id) {
+    var id = judge_id;
+    var path = "/del_judge/" + id;
+    swal({
+      title: "Are you sure?",
+      icon: "warning",
+      text: "You won't be able to revert this!",
+      buttons: true,
+      dangerMode: true
+    }).then(confirm => {
+      if (confirm) {
+        window.location.replace(path);
+      }
+    });
+  }
+</script>
 {% endblock %}
 <!--content part-->
 {% block content %}
@@ -80,10 +97,32 @@
           </p>
           <p>Category:&nbsp;{{data['category']}}</p>
           <p>Added By:&nbsp;{{data['organizer']}}</p>
-          {%if not data['judge']%}
+          {%if not data2%}
           <p style="color: red">Judges yet to be added</p>
           {%else%}
-          <p>Judges:&nbsp;{{data['judge']}}</p>
+          <div class="table-responsive" style="text-align: center">
+            <table class="table table-striped table-bordered">
+              <thead class="thead-dark">
+                <tr>
+                  <th scope="col">Judge</th>
+                  <th scope="col">Delete</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for i in data2 %}
+                <tr>
+                  <td>{{i.name}}</td>
+                  <td>
+                    <a onclick="deljudge('{{ i.id }}')"
+                      ><button class="btn btn-danger" type="submit" name="del">
+                        <i class="fa fa-trash"></i></button
+                    ></a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
           {%endif%}
           <br />
           <h4><span> Click Here To Update</span></h4>
@@ -102,21 +141,3 @@
   <br /><br />
   {% endblock %}
 </div>
-
-<script>
-  function delEvent(event_id) {
-    var id = event_id;
-    var path = "/del_event/" + id;
-    swal({
-      title: "Are you sure?",
-      icon: "warning",
-      text: "You won't be able to revert this!",
-      buttons: true,
-      dangerMode: true
-    }).then(confirm => {
-      if (confirm) {
-        window.location.replace(path);
-      }
-    });
-  }
-</script>
