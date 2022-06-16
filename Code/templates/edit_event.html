@@ -136,11 +136,11 @@
                   <div class="mb-3">
                     <label class="form-label">Assigned Co-Organizer</label>
                     <select class="form-select" name="co-organizer" required>
-                      <option value="{{data.coOrganizer}}" selected>
-                        {{data.coOrganizer}}
+                      <option value="{{data.coorg_mail}}" selected>
+                        {{data.coorg_mail}}
                       </option>
                       {% for i in coorg %}
-                      <option value="{{i.name}}">{{i.name}}</option>
+                      <option value="{{i.email}}">{{i.email}}</option>
                       {% endfor %}
                     </select>
                   </div>
