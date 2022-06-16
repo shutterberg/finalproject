@@ -95,6 +95,7 @@ class Alert(db.Model):
 class Judge(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     name = db.Column(db.String(50),nullable=False)
+    phone = db.Column(db.String(11), nullable=False, unique=True)
     email = db.Column(db.String(50),nullable=False)
     password = db.Column(db.String(255),nullable=False)
     event_id = db.Column(db.Integer,db.ForeignKey('event.id'))
@@ -1487,7 +1488,8 @@ def add_judge():
     if request.method == 'POST':
         if 'coorganizer' in session:
             name = request.form['name']
-            email = request.form['email']     
+            email = request.form['email']
+            phone = request.form['phone']     
             event = request.form['event']  
             email_check = Judge.query.filter_by(email=email).first()
             event_data = Event.query.filter_by(name=event).first()
@@ -1495,7 +1497,7 @@ def add_judge():
                 name_check = Judge.query.filter_by(name=name).first()
                 if not name_check:
                     hash_pass = sha256_crypt.hash(email)
-                    judge = Judge(name=name,email=email,password=hash_pass,event=event)
+                    judge = Judge(name=name,email=email,phone=phone,password=hash_pass,event_id=event_data.id)
                     event_data.judge = name
                     db.session.add(judge)
                     db.session.commit()
@@ -1544,6 +1546,265 @@ def participant_event_register(id):
     else:
         flash("Session Expired","error")
         return redirect(url_for('participantlog'))
+
+#judge login
+@app.route("/judge_log",methods=['GET','POST'])
+def judge_log():
+    return render_template('judge_log.html')
+
+@app.route("/judgelog",methods=['POST'])
+def judgelog():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        response = Judge.query.filter_by(email=email).first()
+        if not response:
+            flash("Email ID not registered",'error')
+            return redirect(url_for("judge_log"))   
+        else:
+            checkpass = sha256_crypt.verify(password,response.password)
+            if email == response.email and checkpass == True:
+                session['judge'] = True
+                session['judge_id'] = response.id
+                session['judge_name'] = response.name
+                session['judge_email'] = response.email
+                session['judge_phone'] = response.phone
+                flash('You were successfully logged in',"success")
+                return redirect(url_for("judgedash"))
+            else:
+                flash('Invalid Credentials',"error")
+                return redirect(url_for("judge_log"))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+@app.route("/judgedash")
+def judgedash():
+    if 'judge' in session:
+        return render_template('judge_dash.html',data=0)
+    else:
+        flash("Session Expired", "error")
+        return redirect(url_for("judge_log"))
+
+@app.route("/judge_profile")
+def judge_profile():
+    if 'judge' in session:
+        return render_template('judge_profile.html')
+    else:
+        flash("Session Expired", "error")
+        return redirect(url_for("judge_log"))
+
+@app.route("/judge_profile_update")
+def judge_profile_update():
+    if 'judge' in session:
+        get_judge_data = Judge.query.filter_by(id=session['judge_id']).first()
+        return render_template('judge_profupdate.html',data=get_judge_data)
+    else:
+        flash("Session Expired", "error")
+        return redirect(url_for("judge_log"))
+
+#judge profile update
+@app.route("/update_judge_profile/<int:id>",methods=['POST'])
+def update_judge_profile(id):
+    if 'judge' in session:
+        if request.method == 'POST':
+            name = request.form['name']
+            phno = request.form['phno']
+            data = Judge.query.filter_by(id=id).first()
+            phno_check = Judge.query.filter_by(phone=phno).first()
+            if phno_check:
+                if(phno_check.id != id):
+                    flash("Phone number is already used by someone else","error")
+                    data = Judge.query.filter_by(id=id).first()
+                    return render_template('judge_profupdate.html',data=data)
+                elif(phno_check.id == id):
+                    data.phone = phno
+                    data.name = name
+                    db.session.commit()
+                    session.clear()
+                    flash("Judge details updated successfully.Login again to see changes","success")
+                    return redirect(url_for("judge_log"))
+            else:
+                data.phone = phno
+                data.name = name
+                db.session.commit()
+                session.clear()
+                flash("Judge details updated successfully.Login again to see changes","success")
+                return redirect(url_for("judge_log"))
+        else:
+            session.clear()
+            flash('Unauthorized access','error')
+            return redirect(url_for('home'))
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('judge_log'))
+
+@app.route("/change_pass_judge",methods=['GET','POST'])
+def change_pass_judge():
+    if 'judge' in session:
+        get_judge_data = Judge.query.filter_by(id=session['judge_id']).first()
+        return render_template('change_pass_judge.html',data=get_judge_data) 
+    else:
+        flash("Session Expired", "error")
+        return redirect(url_for("judge_log"))
+
+#judge change password after login            
+@app.route('/judge_change_pass/<string:email>',methods=['POST'])
+def judge_change_pass(email):
+    if request.method == 'POST':
+        if 'judge' in session:
+            data = Judge.query.filter_by(email=email).first()
+            pass1 = request.form['pass1']
+            flag = 0
+            while True:  
+                if (len(pass1)<8):
+                    flag = -1
+                    break
+                elif not re.search("[a-z]", pass1):
+                    flag = -1
+                    break
+                elif not re.search("[A-Z]", pass1):
+                    flag = -1
+                    break
+                elif not re.search("[0-9]", pass1):
+                    flag = -1
+                    break
+                elif not re.search("[_@$]", pass1):
+                    flag = -1
+                    break
+                elif re.search("\\s", pass1):
+                    flag = -1
+                    break
+                else:
+                    flag = 0
+                    break
+            if flag ==-1:
+                flash("Not a Valid Password","error")
+                return redirect(url_for("change_pass_judge"))
+            pass2 = request.form['pass2']
+            if pass1 == pass2:
+                hash_pass = sha256_crypt.hash(pass1)
+                data.password = hash_pass
+                db.session.commit()
+                flash("Password changed successfully","success")
+                return redirect(url_for("judgedash"))
+            else:
+                flash("Passwords dont match",'error')
+                return redirect(url_for('change_pass_judge'))
+        else:
+            flash("Session Expired","error")
+            return redirect(url_for('judge_log'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+@app.route("/judge_forpass")
+def judge_forpass():
+    return render_template('judge_forpass.html')
+
+#judge forgot password
+@app.route("/judge_send_otp",methods=['POST'])
+def judge_send_otp():
+    if request.method == 'POST':
+        email = request.form['email']
+        email_check = Judge.query.filter_by(email=email).first()
+        if email_check:
+            session['judge'] = True
+            session['email'] = email_check.email
+            otp = random.randint(000000,999999)
+            session['otp'] = otp
+            #send_mail(email,'OTP for Password change',"Dear judge, your verification code is: " + str(otp))
+            flash("OTP sent","success")
+            return redirect(url_for("judge_otp"))
+        else:
+            flash("Email ID not registered. Please check your email id or ask admin to create a new account","error")
+            return redirect(url_for('judge_log'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+@app.route("/judge_otp")
+def judge_otp():
+    return render_template('judge_otp.html')
+
+#judge otp verification for forgot password
+@app.route('/judge_verify',methods=['POST'])
+def judge_verify():
+    if request.method == "POST":
+        if 'judge' in session:
+            judge_otp = request.form['judge_otp']
+            if session['otp'] == int(judge_otp):
+                return redirect(url_for("judge_forpass_form"))
+            else:
+                flash("Wrong OTP. Please try again","error")
+                return redirect(url_for("judge_otp"))
+        else:
+            flash("Session Expired","error")
+            return redirect(url_for('judge_log'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+@app.route("/judge_forpass_form")
+def judge_forpass_form():
+    return render_template('judge_forpass_form.html')
+
+#judge change password after otp verification
+@app.route('/change_judge_pass',methods=['POST'])
+def change_judge_pass():
+    if request.method == "POST":
+        if 'judge' in session:
+            pass1 = request.form['pass1']
+            flag = 0
+            while True:  
+                if (len(pass1)<8):
+                    flag = -1
+                    break
+                elif not re.search("[a-z]", pass1):
+                    flag = -1
+                    break
+                elif not re.search("[A-Z]", pass1):
+                    flag = -1
+                    break
+                elif not re.search("[0-9]", pass1):
+                    flag = -1
+                    break
+                elif not re.search("[_@$]", pass1):
+                    flag = -1
+                    break
+                elif re.search("\\s", pass1):
+                    flag = -1
+                    break
+                else:
+                    flag = 0
+                    break
+            if flag ==-1:
+                flash("Not a Valid Password","error")
+                return redirect(url_for("judge_forpass_form"))
+            pass2 = request.form['pass2']
+            if pass1 == pass2:
+                hash_pass = sha256_crypt.hash(pass1)
+                data = Judge.query.filter_by(email=session['email']).first()
+                data.password = hash_pass
+                db.session.commit()
+                session.pop('judge',None)
+                session.pop('email',None)
+                flash("Password changed successfully","success")
+                return redirect(url_for("judge_log"))
+            else:
+                flash("Passwords dont match",'error')
+                return redirect(url_for('judge_forpass_form'))
+        else:
+            flash("Session Expired","error")
+            return redirect(url_for('judge_log'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
 
 #logout function for all
 @app.route("/logout")
