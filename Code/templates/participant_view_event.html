@@ -1,148 +1,139 @@
-{% extends "layout.html" %}
+{% extends "participant_layout.html" %}
 <!--title part-->
-{% block title %}Home{% endblock %}
+{% block title %}Events{% endblock %}
 <!--head part-->
 {% block head %} {{ super() }}
 <style>
-body
-{
-    margin-top:20px;
+  body {
     background-color: #eee;
-    }
-    .search-result-item-body{
-        background-color:aquamarine;
-        padding: 10px;
-        margin: auto;
+  }
+  .search-result-item-body {
+    background-color: aquamarine;
+    padding: 10px;
+    width:100%;
+  }
 
-    }
-    
-    .search-result-categories>li>a {
-        color:red;
-        font-weight: 400
-    }
-    
-   
-    .search-result-categories>li>a>.glyphicon {
-        margin-right: 5px
-    }
-    
-    .search-result-categories>li>a>.badge {
-        float: right
-    }
-    
-    .search-results-count {
-        margin-top: 10px
-    }
-    
+  .search-result-categories > li > a {
+    color: red;
+    font-weight: 400;
+  }
+
+  .search-result-categories > li > a > .glyphicon {
+    margin-right: 5px;
+  }
+
+  .search-result-categories > li > a > .badge {
+    float: right;
+  }
+
+  .search-results-count {
+    margin-top: 10px;
+  }
+
+  .search-result-item {
+    padding: 20px;
+    background-color: red;
+    border-radius: 4px;
+  }
+
+  .search-result-item:after,
+  .search-result-item:before {
+    content: " ";
+    display: table;
+  }
+
+  .search-result-item:after {
+    clear: both;
+  }
+
+  .search-result-item {
+    display: block;
+    overflow: hidden;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    color: aquamarine;
+  }
+
+  @media (min-width: 768px) {
     .search-result-item {
-        padding: 20px;
-        background-color: red;
-        border-radius: 4px
+      display: inline-block;
+      margin: -20px 0 -20px -20px;
+      width: 200px;
     }
-    
-    .search-result-item:after,
-    .search-result-item:before {
-        content: " ";
-        display: table
+  }
+
+  @media (max-width: 767px) {
+    .search-result-item {
+      max-height: 200px;
     }
-    
-    .search-result-item:after {
-        clear: both
+  }
+
+  .search-result-item {
+    max-width: 100%;
+  }
+
+  .search-result-item .info {
+    margin-top: 2px;
+    font-size: 12px;
+    color: #999;
+  }
+
+  .search-result-item .description {
+    font-size: 13px;
+  }
+
+  .search-result-item + .search-result-item {
+    margin-top: 20px;
+  }
+
+  @media (min-width: 768px) {
+    .search-result-item-body {
+      margin-left: 200px;
     }
-    
-    .search-result-item  {
-        display: block;
-        overflow: hidden;
-        border-top-left-radius: 4px;
-        border-bottom-left-radius: 4px;
-        color: aquamarine;
-    }
-    
-    @media (min-width:768px) {
-        .search-result-item  {
-            display: inline-block;
-            margin: -20px 0 -20px -20px;
-            float: center;
-            width: 200px
-        }
-    }
-    
-    @media (max-width:767px) {
-        .search-result-item  {
-            max-height: 200px
-        }
-    }
-    
-    .search-result-item{
-        max-width: 100%
-    }
-    
-    .search-result-item .info {
-        margin-top: 2px;
-        font-size: 12px;
-        color: #999
-    }
-    
-    .search-result-item .description {
-        font-size: 13px
-    }
-    
-    .search-result-item+.search-result-item {
-        margin-top: 20px
-    }
-    
-    @media (min-width:768px) {
-        .search-result-item-body {
-            margin-left: 200px,
-           
-        }
-    }
-    
+  }
+
+  .search-result-item-heading {
+    font-weight: 400;
+  }
+
+  .search-result-item-heading > a {
+    color: #555;
+  }
+
+  @media (min-width: 768px) {
     .search-result-item-heading {
-        font-weight: 400
+      margin: 0;
     }
-    
-    .search-result-item-heading>a {
-        color: #555
-    }
-    
-    @media (min-width:768px) {
-        .search-result-item-heading {
-            margin: 0
-        }
-    }
+  }
 </style>
 {% endblock %}
 <!--content part-->
 {% block content %}
-<br><br>
+<br /><br />
 
 <div class="container">
-    {% if data %}
-      {% for i in data %}
-        <div class="col-md-9 col-md-pull-3">
-            
-            <div class="search-result-item-body">
-               <!-- <a class="image-link" href="#"><img class="image" src="https://bootdey.com/img/Content/avatar/avatar1.png">
-                </a>-->
-                
-                    <div class="row">
-                        <div class="col-sm-9">
-                            <h4 class="search-result-item-heading">{{i.name}}</h4>
-                            <p class="info">{{i.date}},{{i.time}}</p>
-                            <p class="description">{{i.description}}</p>
-                        </div>
-                        <div class="col-sm-3 text-align-center">
-                            <p class="value3 mt-sm"><b>Category:</b><br>{{i.category}}</p>
-                            <p class="fs-mini text-muted"><b>Contact:</b><br>{{i.coorg_mail}}</p>
-                            <button><a href="/participant_event_register/{{i.id}}">Register</a></button>
-                        </div>
-                    </div>
-                </div>
-          <br><br>
+  {% if data %} {% for i in data %}
+  <div class="col-md-9 col-md-pull-3">
+    <div class="search-result-item-body">
+      <div class="row">
+        <div class="col-sm-9">
+          <h4 class="search-result-item-heading">{{i.name}}</h4>
+          <p class="info">{{i.date}},{{i.time}}</p>
+          <p class="description">{{i.description}}</p>
         </div>
-        {% endfor %}
-        {% endif %}
+        <div class="col-sm-3 text-align-center">
+          <p class="value3 mt-sm"><b>Category:</b><br />{{i.category}}</p>
+          <p class="fs-mini text-muted">
+            <b>Contact:</b><br />{{i.coorg_mail}}
+          </p>
+          <button>
+            <a href="/participant_event_register/{{i.id}}">Register</a>
+          </button>
+        </div>
+      </div>
     </div>
-    </div>
+    <br /><br />
+  </div>
+  {% endfor %} {% endif %}
+</div>
 {% endblock %}
