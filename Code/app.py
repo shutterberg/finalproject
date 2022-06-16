@@ -1507,6 +1507,16 @@ def add_judge():
         flash('Unauthorized access','error')
         return redirect(url_for('home'))
 
+#participant view event
+@app.route("/participant_view_event")
+def participant_view_event():
+    if 'participant' in session:
+        events = Event.query.all()
+        return render_template('participant_view_event.html',data=events)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('participantlog'))
+
 #logout function for all
 @app.route("/logout")
 def logout():
