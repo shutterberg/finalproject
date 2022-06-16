@@ -22,7 +22,76 @@
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <title>Login - EventX</title>
     {% endblock %}
-    <style></style>
+    <style>
+      .card-title {
+        text-align: center;
+        font-family: Bahnschrift SemiBold;
+        font-size: 25px;
+      }
+      .card {
+        /* border-bottom-left-radius: 25px;
+        border-top-right-radius: 25px; */
+        margin: 0px;
+        padding: 0px;
+      }
+      .col {
+        width: auto;
+        height: auto;
+        box-shadow: -1px 0px 10px rgb(164, 163, 163);
+        margin-left: 50px;
+      }
+      /* .card-link {
+        padding: 10px;
+        width: 130px;
+        background-color: rgb(140, 140, 140);
+        color: black;
+        text-decoration: none;
+      } */
+      .card-link {
+        /* margin-top: 20px; */
+        width: 100px;
+        border-radius: 10px;
+        border: 0px;
+        background: url("static/back1.jpg") no-repeat;
+        background-position: center;
+        background-size: cover;
+        color: white;
+        /* margin-bottom: 20px; */
+        text-decoration: none;
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      @media (min-width: 300px) and (max-width: 350px) {
+        #card1 {
+          margin-top: 20px;
+        }
+      }
+      /*meduim mobile phones*/
+      @media (min-width: 350px) and (max-width: 400px) {
+        #card1 {
+          margin-top: 20px;
+        }
+      }
+      /*large mobile phones*/
+      @media (min-width: 400px) and (max-width: 500px) {
+        #card1 {
+          margin-top: 20px;
+        }
+      }
+      /*tablet*/
+      /*tablet mode*/
+      @media (min-width: 600px) and (max-width: 800px) {
+        .card-title {
+          font-size: 20px;
+        }
+      }
+      @media (min-width: 800px) and (max-width: 1050px) {
+      }
+    </style>
   </head>
   <body>
     {% with messages = get_flashed_messages(with_categories=true) %} {% if
@@ -46,16 +115,16 @@
       });
     </script>
     {% endif %} {% endfor %} {% endif %} {% endwith %}
-    <div class="container">
-      <h1>Who are you</h1>
-      <div class="row row-cols-1 row-cols-md-3 g-2 text-center mx-2">
+    <div class="container" style="margin-top: 20px;">
+      <h1 style="text-align: center;color: #7e57c2;">Who are you</h1>
+      <div class="row row-cols-1 row-cols-md-3 g-2 text-center mx-2" style="margin-top:50px">
         <div class="col">
           <div
             class="card p-3 m-3 zooom"
-            style="width: 20rem; background-color: #eee2dc; height: 19rem"
+            style="width: 14rem; height: 20rem; border: 0px"
           >
             <img
-              src="../static/face.png"
+              src="../static/icons8-user-90.png"
               height="195px"
               width="105px"
               class="card-img-top"
@@ -63,35 +132,35 @@
             />
             <div class="card-body">
               <h5 class="card-title fw-bolder">Organizer</h5>
-              <a href="/organizer_log" class="card-link">Login</a>
+            <a href="/organizer_log" class="card-link" style="width: 65px"><button class="card-link">Login</button>   </a>
             </div>
           </div>
         </div>
         <div class="col">
           <div
             class="card p-3 m-3 zooom"
-            style="width: 20rem; background-color: #eee2dc; height: 19rem"
+            style="width: 14rem; height: 20rem; border: 0px;"
           >
-            <img
-              src="../static/face.png"
-              height="195px"
-              width="105px"
-              class="card-img-top"
-              alt="candidate_logo"
-            />
-            <div class="card-body">
-              <h5 class="card-title fw-bolder">Co-Organizer</h5>
-              <a href="coOrganizer_log" class="card-link">Login</a>
-            </div>
-          </div>
+          <img
+          src="../static/icons8-user-90.png"
+          height="195px"
+          width="105px"
+          class="card-img-top"
+          alt="candidate_logo"
+        />
+        <div class="card-body">
+          <h5 class="card-title fw-bolder">Co-Organizer</h5>
+          <a href="coOrganizer_log" class="card-link"><button class="card-link">Login</button></a>
+        </div>
+      </div>
         </div>
         <div class="col">
           <div
             class="card p-3 m-3 zooom"
-            style="width: 20rem; background-color: #eee2dc; height: 19rem"
+            style="width: 14rem; height: 20rem; border: 0px;"
           >
             <img
-              src="../static/face.png"
+              src="../static/icons8-user-90.png"
               height="195px"
               width="105px"
               class="card-img-top"
@@ -99,30 +168,42 @@
             />
             <div class="card-body">
               <h5 class="card-title fw-bolder">Participant</h5>
-              <a href="/participantreg" class="card-link">Register</a>
-              <a href="/participantlog" class="card-link">Login</a>
+              <a href="/participantreg" class="card-link"><button class="card-link">Register</button></a><br>
+              <a href="/participantlog" class="card-link"><button class="card-link" style="margin-top: 10px;">Login</button></a>
             </div>
           </div>
         </div>
         <div class="col">
           <div
             class="card p-3 m-3 zooom"
-            style="width: 20rem; background-color: #eee2dc; height: 19rem"
+            style="width: 14rem; height: 20rem; border: 0px;"
           >
             <img
-              src="../static/face.png"
+              src="../static/icons8-user-90.png"
               height="195px"
-              width="105px"
+              width="90px"
               class="card-img-top"
               alt="candidate_logo"
             />
             <div class="card-body">
               <h5 class="card-title fw-bolder">Judge</h5>
-              <a href="/judge_log" class="card-link">Login</a>
+              <a href="" class="card-link"><button class="card-link">Login</button></a>
             </div>
           </div>
         </div>
       </div>
-      <a href="/">Back</a>
+      <a
+        style="
+          text-decoration: none;
+          color: #7e57c2;
+          font-weight: bold;
+          display: block;
+          margin-top: 25px;
+          text-align: center;
+          background-position: center;
+          font-size: 25px;
+        "
+        href="/"
+        > Back</a>
   </body>
 </html>
