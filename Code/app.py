@@ -61,7 +61,7 @@ class Coorganizer(db.Model):
     phone = db.Column(db.String(11), nullable=False, unique=True)
     password = db.Column(db.String(255),nullable=False)
     organizer = db.Column(db.String(50),nullable=False)
-    #coorg_id=db.relationship('Event',cascade="all,delete",backref='owner')
+    coorg_id=db.relationship('Event',cascade="all,delete",backref='owner1')
     
     def _repr_(self):
         return '<coorganizer %r>' % self.email
@@ -73,7 +73,7 @@ class Event(db.Model):
     date = db.Column(db.String(50), nullable=False)
     time = db.Column(db.String(50), nullable=False)
     category = db.Column(db.String(50),nullable=False)
-    coOrganizer = db.Column(db.String(50),nullable=False)
+    coorg_mail = db.Column(db.String(80),db.ForeignKey('coorganizer.email'))
     org_id = db.Column(db.Integer,db.ForeignKey('organizer.id'))
     judge = db.Column(db.String(50),nullable=True)
     participant_id=db.relationship('Participant',cascade="all,delete",backref='participants')
@@ -100,7 +100,7 @@ class Judge(db.Model):
     def __repr__(self):
         return self.attendee
 
-#db.create_all()
+db.create_all()
 #db.drop_all()
 
 #home page
@@ -203,7 +203,7 @@ def participant_register():
                 participant = Participant(name=name,email=email,phone=phone,category=category,password=hash_pass)
                 db.session.add(participant)
                 db.session.commit()
-                send_mail(email,"Registration Successfull","Thank you for registering on our website.Hope you have a good experience")
+                #send_mail(email,"Registration Successfull","Thank you for registering on our website.Hope you have a good experience")
                 flash('Registeration successfully','success')
                 return redirect(url_for('participantlog'))
             else:
@@ -274,7 +274,7 @@ def participant_send_otp():
             session['email'] = email_check.email
             otp = random.randint(000000,999999)
             session['otp'] = otp
-            send_mail(email,'OTP for Password change',"Dear participant, your verification code is: " + str(otp))
+            #send_mail(email,'OTP for Password change',"Dear participant, your verification code is: " + str(otp))
             flash("OTP sent","success")
             return redirect(url_for("participant_otp"))
         else:
@@ -578,7 +578,7 @@ def add_organizer():
                     organizer = Organizer(name=name,email=email,phone=phone,password=hash_pass,organization=organization)
                     db.session.add(organizer)
                     db.session.commit()
-                    send_mail(email,"You are a Organizer!","You have been successfully added as a ORGANIZER under the organization "+str(organization).upper()+". Please use your email as your password on your first login and change it by clicking the change password option")
+                    #send_mail(email,"You are a Organizer!","You have been successfully added as a ORGANIZER under the organization "+str(organization).upper()+". Please use your email as your password on your first login and change it by clicking the change password option")
                     flash('Organizer added successfully','success')
                     return redirect(url_for('admin_dash'))
                 else:
@@ -766,7 +766,7 @@ def organizer_send_otp():
             session['email'] = email_check.email
             otp = random.randint(000000,999999)
             session['otp'] = otp
-            send_mail(email,'OTP for Password change',"Dear organizer, your verification code is: " + str(otp))
+            #send_mail(email,'OTP for Password change',"Dear organizer, your verification code is: " + str(otp))
             flash("OTP sent","success")
             return redirect(url_for("organizer_otp"))
         else:
@@ -875,7 +875,7 @@ def add_event():
 def addevent():
     if request.method == 'POST':
         if 'organizer' in session:
-            organizer = session['organizer_name']
+            org_id = session['organizer_id']
             name = request.form['name']
             description = request.form['description']     
             date = request.form['date']
@@ -883,10 +883,11 @@ def addevent():
             category = request.form['category']
             coOrganizer = request.form['co-organizer']
             data = Coorganizer.query.filter_by(name=coOrganizer).first()
+            print(data,data.email)
             email = data.email
             name_check = Event.query.filter_by(name=name).first()
             if not name_check:
-                event = Event(name=name,description=description,date=date,time=time,category=category,coOrganizer=coOrganizer,organizer=organizer)
+                event = Event(name=name,description=description,date=date,time=time,category=category,coorg_mail=email,org_id=org_id)
                 db.session.add(event)
                 db.session.commit()
                 send_mail(email,"Event Alloted!","You have been assigned to co-ordinate the "+str(name).upper()+" event. Please login into your dashboard and check for the event details.")
