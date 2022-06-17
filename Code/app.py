@@ -1426,7 +1426,12 @@ def coOrganizer_event_page(id):
     if 'coorganizer' in session:
         get_event_data = Event.query.filter_by(id=id).first()
         get_judge_data = Judge.query.filter_by(event_id=id).all()
-        return render_template('coOrganizer_event_page.html',data=get_event_data,data2=get_judge_data)
+        part_data = Plist.query.filter_by(event_id=id).all()
+        p_data=[]
+        for i in part_data:
+            p_data.append(Participant.query.filter_by(id=i.part_id).first())
+            
+        return render_template('coOrganizer_event_page.html',data=get_event_data,data2=get_judge_data,data3=part_data,data4=p_data)
     else:
         flash("Session Expired","error")
         return redirect(url_for('coOrganizer_log'))
