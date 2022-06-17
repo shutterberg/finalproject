@@ -128,8 +128,10 @@
           {%else%}
           <td>
             <form action="/add_score/{{i.id}}" method="POST">
-              <input type="number" name="mark" required/>
-              <button class="btn btn-success">Add Score</button>
+              <table>
+                <tr><input type="number" name="mark" placeholder="Enter score" style="height: 40px; " required/></tr>
+                <tr><button class="btn btn-success" style="height: 40px; margin-left: 10px;">Add Score</button></tr>
+              </table>
             </form>
           </td>
           {%endif%}
