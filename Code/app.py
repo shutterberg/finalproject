@@ -1080,6 +1080,9 @@ def del_coOrganizer(id):
 def send_alert():
     if 'organizer' in session:
         alerts = Alert.query.all()
+        for i in alerts:
+            org_name = Organizer.query.filter_by(id=i.org_id).first()
+            i.org_id = org_name.name
         return render_template('send_alert.html',data=alerts)
     else:
         flash("Session Expired","error")
