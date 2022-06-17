@@ -23,6 +23,11 @@
     <title>Login - EventX</title>
     {% endblock %}
     <style>
+      body {
+        background-image: url("../static/background.avif");
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
       .card-title {
         text-align: center;
         font-family: Bahnschrift SemiBold;
@@ -50,6 +55,7 @@
       .card-link {
         /* margin-top: 20px; */
         width: 100px;
+        height: 30px;
         border-radius: 10px;
         border: 0px;
         background: url("static/back1.jpg") no-repeat;
@@ -58,6 +64,7 @@
         color: white;
         /* margin-bottom: 20px; */
         text-decoration: none;
+        text-align: center;
       }
       .container {
         display: flex;
@@ -115,9 +122,22 @@
       });
     </script>
     {% endif %} {% endfor %} {% endif %} {% endwith %}
-    <div class="container" style="margin-top: 20px;">
-      <h1 style="text-align: center;color: #7e57c2;">Let Your Fingers Do the Walking Through the event</h1>
-      <div class="row row-cols-1 row-cols-md-3 g-2 text-center mx-2" style="margin-top:50px">
+    <div class="container" style="margin-top: 20px">
+      <h1
+        style="
+          text-align: center;
+          color: white;
+          text-transform: uppercase;
+          text-align: center;
+          font-weight: bold;
+        "
+      >
+        Let Your Fingers Do the Walking Through the event
+      </h1>
+      <div
+        class="row row-cols-1 row-cols-md-3 g-2 text-center mx-2"
+        style="margin-top: 50px"
+      >
         <div class="col">
           <div
             class="card p-3 m-3 zooom"
@@ -132,32 +152,36 @@
             />
             <div class="card-body">
               <h5 class="card-title fw-bolder">Organizer</h5>
-            <a href="/organizer_log" class="card-link" style="width: 65px"><button class="card-link">Login</button>   </a>
+              <a href="/organizer_log" class="card-link" style="width: 65px"
+                ><button class="card-link">Login</button>
+              </a>
             </div>
           </div>
         </div>
         <div class="col">
           <div
             class="card p-3 m-3 zooom"
-            style="width: 14rem; height: 20rem; border: 0px;"
+            style="width: 14rem; height: 20rem; border: 0px"
           >
-          <img
-          src="../static/face.png"
-          height="195px"
-          width="105px"
-          class="card-img-top"
-          alt="candidate_logo"
-        />
-        <div class="card-body">
-          <h5 class="card-title fw-bolder">Co-Organizer</h5>
-          <a href="coOrganizer_log" class="card-link"><button class="card-link">Login</button></a>
-        </div>
-      </div>
+            <img
+              src="../static/face.png"
+              height="195px"
+              width="105px"
+              class="card-img-top"
+              alt="candidate_logo"
+            />
+            <div class="card-body">
+              <h5 class="card-title fw-bolder">Co-Organizer</h5>
+              <a href="coOrganizer_log" class="card-link"
+                ><button class="card-link">Login</button></a
+              >
+            </div>
+          </div>
         </div>
         <div class="col">
           <div
             class="card p-3 m-3 zooom"
-            style="width: 14rem; height: 20rem; border: 0px;"
+            style="width: 14rem; height: 20rem; border: 0px"
           >
             <img
               src="../static/face.png"
@@ -168,15 +192,21 @@
             />
             <div class="card-body">
               <h5 class="card-title fw-bolder">Participant</h5>
-              <a href="/participantreg" class="card-link"><button class="card-link">Register</button></a><br>
-              <a href="/participantlog" class="card-link"><button class="card-link" style="margin-top: 10px;">Login</button></a>
+              <!-- a href="/participantreg" class="card-link"
+                ><button class="card-link">Register</button></a
+              ><br /> -->
+              <a href="/participantlog" class="card-link"
+                ><button class="card-link">
+                  Login
+                </button></a
+              >
             </div>
           </div>
         </div>
         <div class="col">
           <div
             class="card p-3 m-3 zooom"
-            style="width: 14rem; height: 20rem; border: 0px;"
+            style="width: 14rem; height: 20rem; border: 0px"
           >
             <img
               src="../static/face.png"
@@ -187,11 +217,14 @@
             />
             <div class="card-body">
               <h5 class="card-title fw-bolder">Judge</h5>
-              <a href="/judge_log" class="card-link"><button class="card-link">Login</button></a>
+              <a href="/judge_log" class="card-link"
+                ><button class="card-link">Login</button></a
+              >
             </div>
           </div>
         </div>
       </div>
+      <br />
       <a
         style="
           text-decoration: none;
@@ -201,11 +234,14 @@
           margin-top: 25px;
           text-align: center;
           background-position: center;
-          font-size: 25px;
+          font-size: 20px;
           margin-bottom: 20px;
         "
         class="card-link"
         href="/"
-        > Back</a>
+      >
+        Back</a
+      >
+    </div>
   </body>
 </html>
