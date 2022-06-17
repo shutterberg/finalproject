@@ -44,18 +44,49 @@
     background-color: #eee2dc;
     color: #ac3b61;
   }
+  .col {
+        width: 200px;
+        height: 300px;
+        box-shadow: -1px 0px 10px rgb(225, 224, 224);
+        margin-left: 50px;
+        padding: 0px;
+        background-color: white;
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 0px;
+        flex-wrap: wrap;
+      }
+      #viewBtn {
+        /* margin-top: 20px; */
+        width: 100px;
+        border-radius: 10px;
+        border: 0px;
+        background: url("static/back1.jpg") no-repeat;
+        background-position: center;
+        background-size: cover;
+        color: white;
+        /* margin-bottom: 20px; */
+        text-decoration: none;
+      }
+      #container {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+      }
 </style>
 {% endblock %}
 <!--content part-->
 {% block content %} {% if data %}
-<div class="row row-cols-1 row-cols-md-3 g-2 text-center mx-2">
+<div class="row row-cols-md-5 g-2 text-center mx-2" id="container" style="margin-top: 30px; ">
   {% for i in data %}
   <form action="/coOrganizer_event_page/{{i['id']}}" method="POST">
-    <div class="col">
-      <div
-        class="card p-3 m-3 zooom"
-        style="width: 20rem; background-color: #eee2dc; height: 22rem"
-      >
+
+    <div class="col" style="padding: 0px; margin:0px">
         <img
           src="../static/face.png"
           height="155px"
@@ -65,11 +96,12 @@
         />
         <div class="card-body">
           <h5 class="card-title fw-bolder">{{i['name']}}</h5>
-          <p class="card-text fw-bold">{{i['description']}}</p>
+          <p class="card-text fw-bold">{{i['category']}}</p>
           <div class="text-center">
-            <button class="btn btttn fw-bold" type="submit">VIEW</button>
-          </div>
+            <button class="btn btttn fw-bold" id="viewBtn" type="submit">VIEW</button>
         </div>
+    
+
       </div>
     </div>
   </form>
