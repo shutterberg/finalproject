@@ -56,9 +56,9 @@
         <td>{{i.name}}</td>
         <td>{{i.email}}</td>
         <td>{{i.phone}}</td>
-        <td>{{i.organizer}}</td>
+        <td>{{i.coorg_mail}}</td>
         <td>
-          <a onclick="delCoOrganizer('{{ i.id }}')"
+          <a onclick="delJudge('{{ i.id }}')"
             ><button class="btn btn-danger" type="submit" name="del">
               <i class="fa fa-trash"></i></button
           ></a>
@@ -66,14 +66,14 @@
       </tr>
       {% endfor %}{% else %}
       <h2 class="text-center mt-5 fw-bold text-uppercase">
-        No Co-Organizer Added
+        No Judges Added
       </h2>
       {% endif %}
     </tbody>
   </table>
 </div>
 <script>
-  function delCoOrganizer(coorg_id) {
+  function delJudge(coorg_id) {
     var id = coorg_id;
     var path = "/del_coOrganizer/" + id;
     swal({

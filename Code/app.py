@@ -1,3 +1,4 @@
+from asyncio import events
 from flask import *
 from flask_sqlalchemy import SQLAlchemy
 from passlib.hash import sha256_crypt
@@ -678,27 +679,31 @@ def update_organizer_profile(id):
         if request.method == 'POST':
             name = request.form['name']
             phno = request.form['phno']
-            data = Organizer.query.filter_by(id=id).first()
-            phno_check = Organizer.query.filter_by(phone=phno).first()
-            if phno_check:
-                if(phno_check.id != id):
-                    flash("Phone number is already used by someone else","error")
-                    data = Organizer.query.filter_by(id=id).first()
-                    return render_template('organizer_profupdate.html',data=data)
-                elif(phno_check.id == id):
+            if name == session['organizer_name'] and phno == session['organizer_phone']:
+                flash("No changes made","warning")
+                return redirect(url_for("organizerdash"))
+            else:
+                data = Organizer.query.filter_by(id=id).first()
+                phno_check = Organizer.query.filter_by(phone=phno).first()
+                if phno_check:
+                    if(phno_check.id != id):
+                        flash("Phone number is already used by someone else","error")
+                        data = Organizer.query.filter_by(id=id).first()
+                        return render_template('organizer_profupdate.html',data=data)
+                    elif(phno_check.id == id):
+                        data.phone = phno
+                        data.name = name
+                        db.session.commit()
+                        session.clear()
+                        flash("Organizer details updated successfully.Login again to see changes","success")
+                        return redirect(url_for("organizer_log"))
+                else:
                     data.phone = phno
                     data.name = name
                     db.session.commit()
                     session.clear()
                     flash("Organizer details updated successfully.Login again to see changes","success")
                     return redirect(url_for("organizer_log"))
-            else:
-                data.phone = phno
-                data.name = name
-                db.session.commit()
-                session.clear()
-                flash("Organizer details updated successfully.Login again to see changes","success")
-                return redirect(url_for("organizer_log"))
         else:
             session.clear()
             flash('Unauthorized access','error')
@@ -1067,11 +1072,18 @@ def view_coOrganizer():
 @app.route("/del_coOrganizer/<int:id>")
 def del_coOrganizer(id):
     if 'organizer' in session:
-        coOrganizer = Coorganizer.query.filter_by(id=id).first()
-        db.session.delete(coOrganizer)
-        db.session.commit()
-        flash("Co-Organizer deleted successfully","success")
-        return redirect(url_for('view_coOrganizer'))
+        cidd = Coorganizer.query.filter_by(id=id).first()
+        cemail = cidd.email
+        event = Event.query.filter_by(coorg_mail=cemail).first()
+        if not event:
+            coOrganizer = Coorganizer.query.filter_by(id=id).first()
+            db.session.delete(coOrganizer)
+            db.session.commit()
+            flash("Co-Organizer deleted successfully","success")
+            return redirect(url_for('view_coOrganizer'))
+        else:
+            flash("This Co-Organizer has events assigned","error")
+            return redirect(url_for('view_coOrganizer'))
     else:
         flash("Session Expired","error")
         return redirect(url_for('organizer_log'))
@@ -1217,27 +1229,31 @@ def update_coOrganizer_profile(id):
         if request.method == 'POST':
             name = request.form['name']
             phno = request.form['phno']
-            data = Coorganizer.query.filter_by(id=id).first()
-            phno_check = Coorganizer.query.filter_by(phone=phno).first()
-            if phno_check:
-                if(phno_check.id != id):
-                    flash("Phone number is already used by someone else","error")
-                    data = Coorganizer.query.filter_by(id=id).first()
-                    return render_template('coOrganizer_profupdate.html',data=data)
-                elif(phno_check.id == id):
+            if name == session['coorganizer_name'] and phno == session['coorganizer_phone']:
+                flash("No changes made","warning")
+                return redirect(url_for("coOrganizerdash"))
+            else:
+                data = Coorganizer.query.filter_by(id=id).first()
+                phno_check = Coorganizer.query.filter_by(phone=phno).first()
+                if phno_check:
+                    if(phno_check.id != id):
+                        flash("Phone number is already used by someone else","error")
+                        data = Coorganizer.query.filter_by(id=id).first()
+                        return render_template('coOrganizer_profupdate.html',data=data)
+                    elif(phno_check.id == id):
+                        data.phone = phno
+                        data.name = name
+                        db.session.commit()
+                        session.clear()
+                        flash("Co-Organizer details updated successfully.Login again to see changes","success")
+                        return redirect(url_for("coOrganizer_log"))
+                else:
                     data.phone = phno
                     data.name = name
                     db.session.commit()
                     session.clear()
                     flash("Co-Organizer details updated successfully.Login again to see changes","success")
                     return redirect(url_for("coOrganizer_log"))
-            else:
-                data.phone = phno
-                data.name = name
-                db.session.commit()
-                session.clear()
-                flash("Co-Organizer details updated successfully.Login again to see changes","success")
-                return redirect(url_for("coOrganizer_log"))
         else:
             session.clear()
             flash('Unauthorized access','error')
@@ -1891,6 +1907,101 @@ def add_score(id):
         session.clear()
         flash('Unauthorized access','error')
         return redirect(url_for('home'))
+
+@app.route("/participant_view_result",methods=["GET","POST"])
+def participant_view_result():
+    data=[]
+    if 'participant' in session:
+        events=Event.query.all()
+        print(events)
+        return render_template('participant_view_result.html',events=events)
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+""" @app.route("/participant_view_results/<int:id>",methods=["GET","POST"])
+def participant_view_results(id):
+    data=[]
+    if 'participant' in session:
+        event = Event.query.filter_by(id=id).first()
+        participants = Plist.query.filter_by(event_id=id).all()
+        for i in participants:
+            pname = Participant.query.filter_by(id=i.part_id).first()
+            i.pname = pname.name
+        return render_template('participant_results',data=event,data2=participants)
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home')) """
+
+@app.route("/send_alert_coorganizer",methods=["GET","POST"])
+def send_alert_coorganizer():
+    if 'coorganizer' in session:
+        event = Event.query.all()
+        return render_template('send_alert_coorganizer.html',data=event)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('coOrganizer_log'))
+
+@app.route("/coOrganizer_sendalert/<int:id>",methods=["GET","POST"])
+def coOrganizer_sendalert(id):
+    if 'coorganizer' in session:
+        mail=[]
+        plist = Plist.query.filter_by(event_id=id).all()
+        for i in plist:
+            a = Participant.query.filter_by(id=i.part_id).first()
+            mail.append(a.email)
+        return render_template('coorg_event_send_alert.html',data=mail,data2=id)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('coOrganizer_log'))
+
+@app.route("/sendeventalert/<int:id>",methods=["POST"])
+def sendeventalert(id):
+    if request.method == 'POST':
+        if 'coorganizer' in session:
+            subject = request.form['subject']
+            messages = request.form['message']
+            mail=[]
+            plist = Plist.query.filter_by(event_id=id).all()
+            for i in plist:
+                a = Participant.query.filter_by(id=i.part_id).first()
+                mail.append(a.email)
+            recp=[]
+            for i in mail:
+                recp.append(str(i))
+            print(recp)
+            message = Mail(
+            from_email=("eventxsjec@gmail.com", "EventX"),
+                to_emails=recp,
+                subject=subject,
+                html_content=messages)
+            sg = SendGridAPIClient(
+            "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")
+            sg.send(message)
+            flash("Alert message broadcasted","success")
+            return redirect(url_for("coOrganizerdash"))
+        else:
+            flash("Session Expired","error")
+            return redirect(url_for('coOrganizer_log'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
+
+@app.route("/view_judge")
+def view_judge():
+    if 'coorganizer' in session:
+        judges = Judge.query.all()
+        for i in judges:
+            data1 = Coorganizer.query.filter_by(email=i.coorg_mail).first()
+            i.coorg_mail=data1.name
+        return render_template('view_judge.html',data=judges)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('coOrganizer_log'))
+
 
 #logout function for all
 @app.route("/logout")
