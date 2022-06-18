@@ -35,78 +35,93 @@
     background-color: #e3f2fd;
     cursor: pointer;
   }
+  .details-item-body {
+    background-color: rgb(230, 230, 230);
+    padding: 10px;
+    width:100%;
+    box-shadow: 0px 2px 10px rgb(194, 194, 194);
+  }
 </style>
 {% endblock %}
 <!--content part-->
 {% block content %}
 <div class="container" style="padding: 30px">
-  <div class="input-group mb-3">
-    <span class="input-group-text" id="basic-addon1">Event Name</span>
-    <input
-      type="text"
-      class="form-control"
-      placeholder="{{data['name']}}"
-      aria-label="Username"
-      aria-describedby="basic-addon1"
-      readonly
-    />
-  </div>
+  <div class="details-item-body">
+    <!-- <div class="input-group mb-3">
+      <span class="input-group-text" id="basic-addon1">Event Name</span>
+      <input
+        type="text"
+        class="form-control"
+        placeholder="{{data['name']}}"
+        aria-label="Username"
+        aria-describedby="basic-addon1"
+        readonly
+      />
+    </div> -->
 
-  <div class="input-group mb-3">
-    <span class="input-group-text" id="basic-addon1">Description</span>
-    <input
-      type="text"
-      class="form-control"
-      placeholder="{{data['description']}}"
-      aria-label="Username"
-      aria-describedby="basic-addon1"
-      readonly
-    />
+    <p class="info">Event Name : {{data['name']}}<br>
+    <p class="info">Description : {{data['description']}}<br>
+    <p class="info">Event Time : {{data['time']}}<br>
+    <p class="info">Event Date : {{data['date']}}<br>
+    <p class="info">Event Category : {{data['category']}}<br>
+    <p class="info">Co-Organizer Contact : {{data['coorg_mail']}}<br>
   </div>
-  <div class="input-group mb-3">
-    <span class="input-group-text" id="basic-addon1">Event Time</span>
-    <input
-      type="text"
-      class="form-control"
-      placeholder="{{data['time']}}"
-      aria-label="Username"
-      aria-describedby="basic-addon1"
-      readonly
-    />
-  </div>
-  <div class="input-group mb-3">
-    <span class="input-group-text" id="basic-addon1">Event Date</span>
-    <input
-      type="text"
-      class="form-control"
-      placeholder="{{data['date']}}"
-      aria-label="Username"
-      aria-describedby="basic-addon1"
-      readonly
-    />
-  </div>
-  <div class="input-group mb-3">
-    <span class="input-group-text" id="basic-addon1">Event Category</span>
-    <input
-      type="text"
-      class="form-control"
-      placeholder="{{data['category']}}"
-      aria-label="Username"
-      aria-describedby="basic-addon1"
-      readonly
-    />
-  </div>
-  <div class="input-group mb-3">
-    <span class="input-group-text" id="basic-addon1">Co-Organizer Contact</span>
-    <input
-      type="text"
-      class="form-control"
-      placeholder="{{data['coorg_mail']}}"
-      aria-label="Username"
-      aria-describedby="basic-addon1"
-      readonly
-    />
-  </div>
+    <!-- <div class="input-group mb-3">
+      <span class="input-group-text" id="basic-addon1">Description</span>
+      <input
+        type="text"
+        class="form-control"
+        placeholder="{{data['description']}}"
+        aria-label="Username"
+        aria-describedby="basic-addon1"
+        readonly
+      />
+    </div>
+    <div class="input-group mb-3">
+      <span class="input-group-text" id="basic-addon1">Event Time</span>
+      <input
+        type="text"
+        class="form-control"
+        placeholder="{{data['time']}}"
+        aria-label="Username"
+        aria-describedby="basic-addon1"
+        readonly
+      />
+    </div>
+    <div class="input-group mb-3">
+      <span class="input-group-text" id="basic-addon1">Event Date</span>
+      <input
+        type="text"
+        class="form-control"
+        placeholder="{{data['date']}}"
+        aria-label="Username"
+        aria-describedby="basic-addon1"
+        readonly
+      />
+    </div>
+    <div class="input-group mb-3">
+      <span class="input-group-text" id="basic-addon1">Event Category</span>
+      <input
+        type="text"
+        class="form-control"
+        placeholder="{{data['category']}}"
+        aria-label="Username"
+        aria-describedby="basic-addon1"
+        readonly
+      />
+    </div>
+    <div class="input-group mb-3">
+      <span class="input-group-text" id="basic-addon1">Co-Organizer Contact</span>
+      <input
+        type="text"
+        class="form-control"
+        placeholder="{{data['coorg_mail']}}"
+        aria-label="Username"
+        aria-describedby="basic-addon1"
+        readonly
+      />
+    </div>
+  </div> -->
   <hr />
   {% if data2 %}
   <div class="table-responsive">
