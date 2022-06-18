@@ -2002,6 +2002,22 @@ def view_judge():
         flash("Session Expired","error")
         return redirect(url_for('coOrganizer_log'))
 
+@app.route("/del_judge_list/<int:id>")
+def del_judge_list(id):
+    if 'coorganizer' in session:
+        jd = Judge.query.filter_by(id=id).first()
+        if jd.event_id is None:
+            judge = Judge.query.filter_by(id=id).first()
+            db.session.delete(judge)
+            db.session.commit()
+            flash("Judge deleted successfully","success")
+            return redirect(url_for('view_judge'))
+        else:
+            flash("This Judge is assigned","error")
+            return redirect(url_for('view_judge'))
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('coOrganizer_log'))
 
 #logout function for all
 @app.route("/logout")
