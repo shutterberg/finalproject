@@ -1934,17 +1934,7 @@ def add_score(id):
         flash('Unauthorized access','error')
         return redirect(url_for('home'))
 
-@app.route("/participant_view_result",methods=["GET","POST"])
-def participant_view_result():
-    data=[]
-    if 'participant' in session:
-        events=Event.query.all()
-        print(events)
-        return render_template('participant_view_result.html',events=events)
-    else:
-        session.clear()
-        flash('Unauthorized access','error')
-        return redirect(url_for('home'))
+
 
 """ @app.route("/participant_view_results/<int:id>",methods=["GET","POST"])
 def participant_view_results(id):
@@ -2104,6 +2094,28 @@ def sendeventcertificate(id):
         session.clear()
         flash('Unauthorized access','error')
         return redirect(url_for('home'))
+@app.route("/participant_view_result")
+def participant_view_result():
+    if 'participant' in session:
+        event_names = []
+        event_results = []
+        par_data = Plist.query.filter_by(part_id=session['participant_id']).all()
+        for i in par_data:
+            sb=i.event_id
+            data1 = Event.query.filter_by(id = sb).all()
+            order= Plist.query.filter_by(event_id = sb).order_by(Plist.score.desc()).limit(2).all()
+            #print(order)
+            for k in order:
+                info=Participant.query.filter_by(id=k.part_id).first()
+                cont=str(info.name+" ("+info.email+")")
+                k.details=cont
+                db.session.commit()
+            event_names.append(data1)
+            event_results.append(order)
+        return render_template('part_view_results.html',data=event_names,data1=event_results,leng=len(event_names)-1)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('participantlog'))
 
 #logout function for all
 @app.route("/logout")
