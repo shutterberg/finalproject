@@ -2019,12 +2019,12 @@ def participant_view_result():
             sb=i.event_id
             data1 = Event.query.filter_by(id = sb).all()
             order= Plist.query.filter_by(event_id = sb).order_by(Plist.score).all()
-            print(order)
-            """for k in order:
+            #print(order)
+            for k in order:
                 info=Participant.query.filter_by(id=k.part_id).first()
-                cont=str(info.name+"("+info.email+")")
+                cont=str(info.name+" ("+info.email+")")
                 k.details=cont
-                db.session.commit()"""
+                db.session.commit()
             event_names.append(data1)
             event_results.append(order)
         return render_template('part_view_results.html',data=event_names,data1=event_results,leng=len(event_names)-1)
