@@ -2,11 +2,13 @@ from asyncio import events
 from flask import *
 from flask_sqlalchemy import SQLAlchemy
 from passlib.hash import sha256_crypt
-import os,random,re
+import os,random,re,requests,json
+import io,csv,cloudinary,qrcode
 from datetime import timedelta
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from sendgrid.helpers.mail import To
+import cloudinary.uploader
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(16)
@@ -14,6 +16,12 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///event_db.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['SESSION_COOKIE_NAME'] = 'login-system'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
+
+cloudinary.config(
+    cloud_name="eventx",
+    api_key="984453684258296",
+    api_secret="K6hTffq9dyhZVcoL4SX9giefitc"
+)
 
 #client_id="505348922138-a10mfp737qq5lmgi33opfis1ln0cka5j.apps.googleusercontent.com",
 #client_secret='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',
@@ -41,6 +49,7 @@ class Participant(db.Model):
     phone = db.Column(db.String(11), nullable=False, unique=True)
     password = db.Column(db.String(255),nullable=False)
     category = db.Column(db.String(50),nullable=False)
+    qrlink= db.Column(db.String(50),nullable=True)
     event_id = db.Column(db.Integer,db.ForeignKey('event.id'))
     pevent_id=db.relationship('Plist',cascade="all,delete",backref='owner')
 
@@ -171,6 +180,11 @@ def mainadmin_log():
 def participantreg():
     return render_template('participantreg.html')
 
+def upload(file, **options):
+    res = cloudinary.uploader.upload(file)
+    return res['secure_url']
+
+
 #participant registeration
 @app.route("/participant_register",methods=["POST"])
 def participant_register():
@@ -214,7 +228,19 @@ def participant_register():
                 participant = Participant(name=name,email=email,phone=phone,category=category,password=hash_pass)
                 db.session.add(participant)
                 db.session.commit()
-                send_mail(email,"Registration Successfull","Thank you for registering on our website.Hope you have a good experience")
+                data = Participant.query.filter_by(email=email).first()
+                link = str(str(data.id)+" "+data.name+" "+data.email)
+                qr_image = qrcode.QRCode(version=1, box_size=10, border=5)
+                qr_image.add_data(link)
+                qr_image.make(fit=True)
+                img = qr_image.make_image(fill='black', back_color='white')
+                buffer = io.BytesIO()
+                img.save(buffer, format="PNG")
+                buffer.seek(0)
+                img_url = upload(buffer)
+                part_data = Participant(qrlink = img_url)
+                db.session.commit()
+                send_mail(email,"Registration Successfull","Thank you for registering on our website.Hope you have a good experience.Your unique QR code is: "+img_url)
                 flash('Registeration successfully','success')
                 return redirect(url_for('participantlog'))
             else:
@@ -2009,6 +2035,65 @@ def del_judge_list(id):
         flash("Session Expired","error")
         return redirect(url_for('coOrganizer_log'))
 
+@app.route("/send_certificate",methods=["GET","POST"])
+def send_certificate():
+    if 'coorganizer' in session:
+        event = Event.query.all()
+        return render_template('send_certificate.html',data=event)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('coOrganizer_log'))
+
+@app.route("/coOrganizer_sendcertificate/<int:id>",methods=["GET","POST"])
+def coOrganizer_sendcertificate(id):
+    if 'coorganizer' in session:
+        mail=[]
+        plist = Plist.query.filter_by(event_id=id).all()
+        for i in plist:
+            a = Participant.query.filter_by(id=i.part_id).first()
+            mail.append(a.email)
+        return render_template('coorg_send_certificate.html',data=mail,data2=id)
+    else:
+        flash("Session Expired","error")
+        return redirect(url_for('coOrganizer_log'))
+
+def rowToListContact(obj):
+    lst = []
+    data = Participant.query.filter_by(id=obj.part_id).first()
+    name = data.name
+    email = data.email
+    lst.append(name)
+    lst.append(email)
+    lst.append('EventX')
+    return lst
+
+@app.route("/sendeventcertificate/<int:id>",methods=["POST"])
+def sendeventcertificate(id):
+    if request.method == 'POST':
+        if 'coorganizer' in session:
+            plist = Plist.query.filter_by(event_id=id).all()
+            if len(plist) == 0:
+                flash("No participants registered", "error")
+                return redirect(url_for("coOrganizerdash"))
+            si = io.StringIO()
+            cw = csv.writer(si, delimiter=",")
+            cw.writerow(["Name", "Email", "CourseName"])
+            for row in plist:
+                row = rowToListContact(row)
+                cw.writerow(row)
+                output = make_response(si.getvalue())
+                output.headers["Content-Disposition"] = "attachment; filename=participants.csv"
+                output.headers["Content-type"] = "text/csv"
+            flash("Alert message broadcasted","success")
+            return output
+            #return redirect(url_for("coOrganizerdash"))
+        else:
+            flash("Session Expired","error")
+            return redirect(url_for('coOrganizer_log'))
+    else:
+        session.clear()
+        flash('Unauthorized access','error')
+        return redirect(url_for('home'))
 @app.route("/participant_view_result")
 def participant_view_result():
     if 'participant' in session:
