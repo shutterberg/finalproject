@@ -2018,7 +2018,7 @@ def participant_view_result():
         for i in par_data:
             sb=i.event_id
             data1 = Event.query.filter_by(id = sb).all()
-            order= Plist.query.filter_by(event_id = sb).order_by(Plist.score).all()
+            order= Plist.query.filter_by(event_id = sb).order_by(Plist.score.desc()).limit(2).all()
             #print(order)
             for k in order:
                 info=Participant.query.filter_by(id=k.part_id).first()
