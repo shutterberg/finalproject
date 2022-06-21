@@ -229,7 +229,7 @@ def participant_register():
                 db.session.add(participant)
                 db.session.commit()
                 data = Participant.query.filter_by(email=email).first()
-                link = str(str(data.id)+" "+data.name+" "+data.email)
+                link = str("ID: "+str(data.id)+"\nName: "+data.name+"\nEmail: "+data.email+"\nPhone: "+str(data.phone))
                 qr_image = qrcode.QRCode(version=1, box_size=10, border=5)
                 qr_image.add_data(link)
                 qr_image.make(fit=True)
