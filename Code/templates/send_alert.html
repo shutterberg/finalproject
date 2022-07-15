@@ -76,20 +76,20 @@
   }
 
   function delattendee(attendee_id) {
-		var id = attendee_id
-		var path = '/del_attendee/'+id
-		swal({
-			title: 'Are you sure?',
-			icon: 'warning',
-			text: "You won't be able to revert this!",
-			buttons: true,
-			dangerMode: true,
-		})
-		.then((confirm)=> {
-			if(confirm) {
-				window.location.replace(path);
-		}})
-	}
+    var id = attendee_id;
+    var path = "/del_attendee/" + id;
+    swal({
+      title: "Are you sure?",
+      icon: "warning",
+      text: "You won't be able to revert this!",
+      buttons: true,
+      dangerMode: true
+    }).then(confirm => {
+      if (confirm) {
+        window.location.replace(path);
+      }
+    });
+  }
 </script>
 {% endblock %}
 <!--content part-->
@@ -146,7 +146,7 @@
             <div class="container mb-2">
               <div class="row justify-content-center">
                 {% if data %}
-                <div class="table-responsive" style="text-align: center;">
+                <div class="table-responsive" style="text-align: center">
                   <table class="table table-striped table-bordered">
                     <thead class="thead-dark">
                       <tr>

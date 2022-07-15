@@ -1383,7 +1383,7 @@ def coOrganizer_otp():
 def coOrganizer_verify():
     if request.method == "POST":
         if 'coorganizer' in session:
-            coOrganizer_otp = request.form['coorganizer_otp']
+            coOrganizer_otp = request.form['coOrganizer_otp']
             if session['otp'] == int(coOrganizer_otp):
                 return redirect(url_for("coOrganizer_forpass_form"))
             else:
@@ -1596,7 +1596,7 @@ def participant_event_register(id):
             part = Plist(part_id=part_id,event_id=id)
             db.session.add(part)
             db.session.commit()
-            flash('Registration Sucessful for event','success')
+            flash('Event Registration Successful','success')
             return redirect(url_for('participant_view_event'))
         else:
             flash('Already Registered','error')
@@ -1934,28 +1934,11 @@ def add_score(id):
         flash('Unauthorized access','error')
         return redirect(url_for('home'))
 
-
-
-""" @app.route("/participant_view_results/<int:id>",methods=["GET","POST"])
-def participant_view_results(id):
-    data=[]
-    if 'participant' in session:
-        event = Event.query.filter_by(id=id).first()
-        participants = Plist.query.filter_by(event_id=id).all()
-        for i in participants:
-            pname = Participant.query.filter_by(id=i.part_id).first()
-            i.pname = pname.name
-        return render_template('participant_results',data=event,data2=participants)
-    else:
-        session.clear()
-        flash('Unauthorized access','error')
-        return redirect(url_for('home')) """
-
 @app.route("/send_alert_coorganizer",methods=["GET","POST"])
 def send_alert_coorganizer():
     if 'coorganizer' in session:
-        event = Event.query.all()
-        return render_template('send_alert_coorganizer.html',data=event)
+        events = Event.query.filter_by(coorg_mail=session['coorganizer_email'])
+        return render_template('send_alert_coorganizer.html',data=events)
     else:
         flash("Session Expired","error")
         return redirect(url_for('coOrganizer_log'))
@@ -1987,7 +1970,9 @@ def sendeventalert(id):
             recp=[]
             for i in mail:
                 recp.append(str(i))
-            print(recp)
+            if not recp:
+                flash("No Registrations Yet","error")
+                return redirect(url_for("coOrganizerdash"))
             message = Mail(
             from_email=("eventxsjec@gmail.com", "EventX"),
                 to_emails=recp,
@@ -2038,8 +2023,8 @@ def del_judge_list(id):
 @app.route("/send_certificate",methods=["GET","POST"])
 def send_certificate():
     if 'coorganizer' in session:
-        event = Event.query.all()
-        return render_template('send_certificate.html',data=event)
+        events = Event.query.filter_by(coorg_mail=session['coorganizer_email'])
+        return render_template('send_certificate.html',data=events)
     else:
         flash("Session Expired","error")
         return redirect(url_for('coOrganizer_log'))
@@ -2094,17 +2079,20 @@ def sendeventcertificate(id):
         session.clear()
         flash('Unauthorized access','error')
         return redirect(url_for('home'))
+
 @app.route("/participant_view_result")
 def participant_view_result():
     if 'participant' in session:
         event_names = []
         event_results = []
         par_data = Plist.query.filter_by(part_id=session['participant_id']).all()
+        if not par_data:
+            flash("No events registered","error")
+            return redirect(url_for('participantdash'))
         for i in par_data:
             sb=i.event_id
             data1 = Event.query.filter_by(id = sb).all()
             order= Plist.query.filter_by(event_id = sb).order_by(Plist.score.desc()).limit(2).all()
-            #print(order)
             for k in order:
                 info=Participant.query.filter_by(id=k.part_id).first()
                 cont=str(info.name+" ("+info.email+")")
@@ -2112,7 +2100,7 @@ def participant_view_result():
                 db.session.commit()
             event_names.append(data1)
             event_results.append(order)
-        return render_template('part_view_results.html',data=event_names,data1=event_results,leng=len(event_names)-1)
+        return render_template('part_view_results.html',data=event_names,data10=event_results,leng=len(event_names))
     else:
         flash("Session Expired","error")
         return redirect(url_for('participantlog'))

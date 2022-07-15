@@ -5,10 +5,10 @@
 {% block head %} {{ super() }}
 <style>
   body {
-        background-image: url("../static/background.avif");
-        background-repeat: no-repeat;
-        background-size: cover;
-      }
+    background-image: url("../static/background.avif");
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
   .card {
     margin-top: 40px;
   }
@@ -94,13 +94,13 @@
               </div>
               <div class="mb-3" style="margin-top: 10px">
                 <label class="form-label">Category</label>
-                    <select class="form-select" name="category" required>
-                      <option selected>{{data.category}}</option>
-                      <option value="Primary">Primary</option>
-                      <option value="High School">High School</option>
-                      <option value="PU">PU</option>
-                      <option value="Graduate">Graduate</option>
-                    </select>
+                <select class="form-select" name="category" required>
+                  <option selected>{{data.category}}</option>
+                  <option value="Primary">Primary</option>
+                  <option value="High School">High School</option>
+                  <option value="PU">PU</option>
+                  <option value="Graduate">Graduate</option>
+                </select>
               </div>
               <div class="row justify-content-center">
                 <button type="submit" id="button1" class="btn btn-primarys">
