@@ -38,7 +38,7 @@
   .details-item-body {
     background-color: rgb(230, 230, 230);
     padding: 10px;
-    width:100%;
+    width: 100%;
     box-shadow: 0px 2px 10px rgb(194, 194, 194);
   }
 </style>
@@ -59,14 +59,15 @@
       />
     </div> -->
 
-    <p class="info">Event Name : {{data['name']}}<br>
-    <p class="info">Description : {{data['description']}}<br>
-    <p class="info">Event Time : {{data['time']}}<br>
-    <p class="info">Event Date : {{data['date']}}<br>
-    <p class="info">Event Category : {{data['category']}}<br>
-    <p class="info">Co-Organizer Contact : {{data['coorg_mail']}}<br>
+    <p class="info">Event Name : {{data['name']}}<br /></p>
+    <p class="info">Description : {{data['description']}}<br /></p>
+    <p class="info">Event Time : {{data['time']}}<br /></p>
+    <p class="info">Event Date : {{data['date']}}<br /></p>
+    <p class="info">Event Category : {{data['category']}}<br /></p>
+    <p class="info">Co-Organizer Contact : {{data['coorg_mail']}}<br /></p>
   </div>
-    <!-- <div class="input-group mb-3">
+
+  <!-- <div class="input-group mb-3">
       <span class="input-group-text" id="basic-addon1">Description</span>
       <input
         type="text"
@@ -144,8 +145,23 @@
           <td>
             <form action="/add_score/{{i.id}}" method="POST">
               <table>
-                <tr><input type="number" name="mark" placeholder="Enter score" style="height: 40px; " required/></tr>
-                <tr><button class="btn btn-success" style="height: 40px; margin-left: 10px;">Add Score</button></tr>
+                <tr>
+                  <input
+                    type="number"
+                    name="mark"
+                    placeholder="Enter score"
+                    style="height: 40px"
+                    required
+                  />
+                </tr>
+                <tr>
+                  <button
+                    class="btn btn-success"
+                    style="height: 40px; margin-left: 10px"
+                  >
+                    Add Score
+                  </button>
+                </tr>
               </table>
             </form>
           </td>

@@ -128,7 +128,6 @@
           <th scope="col">Name</th>
           <th scope="col">Email</th>
           <th scope="col">Phone</th>
-          
         </tr>
       </thead>
       <tbody>
@@ -138,10 +137,11 @@
           <td>{{i.name}}</td>
           <td>{{i.email}}</td>
           <td>{{i.phone}}</td>
-          
         </tr>
         {% endfor %}{% else %}
-        <h2 class="text-center mt-5 fw-bold text-uppercase">No Registrations</h2>
+        <h2 class="text-center mt-5 fw-bold text-uppercase">
+          No Registrations
+        </h2>
         {% endif %}
       </tbody>
     </table>

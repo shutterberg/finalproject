@@ -5,10 +5,10 @@
 {% block head %} {{ super() }}
 <style>
   body {
-        background-image: url("../static/background.avif");
-        background-repeat: no-repeat;
-        background-size: cover;
-      }
+    background-image: url("../static/background.avif");
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
   .card {
     margin-top: 40px;
   }
@@ -42,7 +42,10 @@
         <div class="card-header">Change Password</div>
         <div class="card-body">
           <div class="container">
-            <form action="/coOrganizer_change_pass/{{data.email}}" method="POST">
+            <form
+              action="/coOrganizer_change_pass/{{data.email}}"
+              method="POST"
+            >
               <div class="mb-3" style="margin-top: 10px">
                 <label class="form-label">Email</label>
                 <input
