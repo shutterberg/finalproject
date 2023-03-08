@@ -19,8 +19,8 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 
 cloudinary.config(
     cloud_name="eventx",
-    api_key="984453684258296",
-    api_secret="K6hTffq9dyhZVcoL4SX9giefitc"
+    api_key="",
+    api_secret=""
 )
 
 #client_id="505348922138-a10mfp737qq5lmgi33opfis1ln0cka5j.apps.googleusercontent.com",
